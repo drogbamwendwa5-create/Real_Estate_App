@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
+import authService from '../../Services/api/authService';
 
 export default function ForgotPasswordScreen() {
   const [loading, setLoading] = useState(false);
@@ -10,9 +11,14 @@ export default function ForgotPasswordScreen() {
 
   const onSubmit = async (data) => {
     setLoading(true);
-    // TODO: Call forgot password API
-    setSent(true);
-    setLoading(false);
+    try {
+      await authService.forgotPassword(data.email);
+      setSent(true);
+    } catch (error) {
+      console.error('Forgot password error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (sent) {
