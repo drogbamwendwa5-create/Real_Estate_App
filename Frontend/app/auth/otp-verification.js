@@ -1,51 +1,53 @@
 import React, { useState, useRef } from 'react';
 import { View, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Button, Text, HelperText } from 'react-native-paper';
+import { useForm, Controller } from 'react-hook-form';
+import authService from '../../Services/api/authService';
+import { useRouter } from 'expo-router';
 
 export default function OTPVerificationScreen() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const inputs = useRef([]);
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const { control, handleSubmit, formState: { errors } } = useForm();
 
-  const handleChange = (text, index) => {
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-    if (text && index < 5) inputs.current[index + 1].focus();
-  };
-
-  const onSubmit = async () => {
+  const onSubmit = async (data) => {
     setLoading(true);
-    const otpCode = otp.join('');
-    // TODO: Call OTP verification API
-    console.log(otpCode);
-    setLoading(false);
+    setError('');
+    try {
+      await authService.verifyEmail(data.token);
+      router.replace('/(tabs)/home');
+    } catch (err) {
+      setError(err.message || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (error) {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Verify OTP</Text>
+        <Text style={styles.subtitle}>Enter the 6-digit code sent to your email</Text>
+        <HelperText type="error">{error}</HelperText>
+        <Button mode="contained" style={styles.button} onPress={() => router.back()}>
+          Go Back
+        </Button>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>Enter the 6-digit code sent to your email</Text>
-      <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={(ref) => (inputs.current[index] = ref)}
-            style={styles.otpInput}
-            maxLength={1}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            value={digit}
-            onChangeText={(text) => handleChange(text, index)}
-          />
-        ))}
-      </View>
-      <Button mode="contained" style={styles.button} onPress={onSubmit} loading={loading}>
+      <Controller control={control} name="token" defaultValue="" rules={{ required: 'Verification code is required', minLength: { value: 6, message: 'Code must be 6 digits' } }} render={({ field: { onChange, value } }) => (
+        <TextInput label="Verification Code" value={value} onChangeText={onChange} keyboardType="number-pad" maxLength={6} error={!!errors.token} style={styles.input} />
+      )} />
+      {errors.token && <HelperText type="error">{errors.token.message}</HelperText>}
+      <Button mode="contained" style={styles.button} onPress={handleSubmit(onSubmit)} loading={loading}>
         Verify
       </Button>
-      <Text style={styles.resend} onPress={() => {}}>
-        Resend OTP (30s)
-      </Text>
     </ScrollView>
   );
 }

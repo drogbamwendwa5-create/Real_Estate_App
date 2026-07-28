@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { login as loginApi, register as registerApi, logout as logoutApi, forgotPassword, resetPassword, verifyEmail, updatePassword, updateUserDetails } from '../Services/api';
+import { login as loginApi, register as registerApi, logout as logoutApi, forgotPassword, resetPassword, verifyEmail, updatePassword, updateUserDetails, getMe } from '../Services/api';
 import { getToken, removeToken, storeToken } from '../Utils/storage';
 
 // Standalone auth functions for direct use in screens
@@ -25,8 +25,8 @@ export const useAuth = () => {
     try {
       const token = await getToken();
       if (token) {
-        // Fetch user data
-        // TODO: Implement getMe API call
+        const res = await getMe();
+        setUser(res.data.user);
       }
     } catch (error) {
       await removeToken();
