@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { login as loginApi, register as registerApi, logout as logoutApi, forgotPassword, resetPassword, verifyEmail, updatePassword, updateUserDetails, getMe } from '../Services/api';
+import { login as loginApi, register as registerApi, logout as logoutApi, forgotPassword as forgotPasswordApi, resetPassword as resetPasswordApi, verifyEmail as verifyEmailApi, updatePassword as updatePasswordApi, updateUserDetails as updateUserDetailsApi } from '../Services/api';
+import authService from '../Services/api/authService';
 import { getToken, removeToken, storeToken } from '../Utils/storage';
 
 // Standalone auth functions for direct use in screens
@@ -25,8 +26,8 @@ export const useAuth = () => {
     try {
       const token = await getToken();
       if (token) {
-        const res = await getMe();
-        setUser(res.data.user);
+        const res = await authService.getProfile();
+        setUser(res.user);
       }
     } catch (error) {
       await removeToken();
@@ -51,19 +52,19 @@ export const useAuth = () => {
       setUser(null);
     },
     forgotPassword: async (email) => {
-      return await forgotPassword(email);
+      return await forgotPasswordApi(email);
     },
     resetPassword: async (token, password) => {
-      return await resetPassword(token, password);
+      return await resetPasswordApi(token, password);
     },
     verifyEmail: async (token) => {
-      return await verifyEmail(token);
+      return await verifyEmailApi(token);
     },
     updatePassword: async (currentPassword, newPassword) => {
-      return await updatePassword(currentPassword, newPassword);
+      return await updatePasswordApi(currentPassword, newPassword);
     },
     updateUserDetails: async (data) => {
-      const response = await updateUserDetails(data);
+      const response = await updateUserDetailsApi(data);
       setUser(response.data);
       return response;
     },

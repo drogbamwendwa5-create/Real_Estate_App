@@ -1,5 +1,6 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -19,12 +20,19 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      // TODO: Handle token retrieval error
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
+
+let routerInstance = null;
+
+export const setNavigation = (router) => {
+  routerInstance = router;
+};
 
 api.interceptors.response.use(
   (response) => response,
@@ -32,7 +40,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
-      // TODO: Redirect to login screen
+      if (routerInstance) {
+        routerInstance.replace('/auth/login');
+      }
     }
     return Promise.reject(error);
   }
