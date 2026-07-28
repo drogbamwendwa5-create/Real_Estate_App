@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Real Estate App",
+    "slug": "Real-Estate-App",
+    "scheme": "real-estate-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "extra": {
+      "apiUrl": "http://192.168.0.29:5000/api",
+      "EXPO_APP_API_URL": "http://192.168.0.29:5000/api"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.realestate.app"
+    },
+    "android": {
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.realestate.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image",
+        {
+          "cameraPermission": "The app needs camera permission to upload property images."
+        }
+      ],
+      "expo-sharing",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

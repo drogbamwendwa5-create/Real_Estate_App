@@ -1,0 +1,66 @@
+services:
+  mongodb:
+    image: mongo:6
+    container_name: real-estate-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: real_estate
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: mongosh --eval 'db.adminCommand("ping")' --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - real-estate-network
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: real-estate-backend
+    ports:
+      - "5001:5000"
+    environment:
+      NODE_ENV: development
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/real_estate?authSource=admin
+      PORT: 5000
+      JWT_SECRET: your_jwt_secret_key_here_change_me
+      FRONTEND_URL: http://localhost:3000
+    env_file:
+      - ./Backend/.env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./Backend:/app
+    command: node server.js
+    networks:
+      - real-estate-network
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: real-estate-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend:5000/api
+    volumes:
+      - ./Frontend:/app
+    networks:
+      - real-estate-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  real-estate-network:
+    driver: bridge
