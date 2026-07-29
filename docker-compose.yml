@@ -38,6 +38,7 @@ services:
         condition: service_healthy
     volumes:
       - ./Backend:/app
+      - /app/node_modules
     command: node server.js
     networks:
       - real-estate-network
@@ -55,6 +56,7 @@ services:
       REACT_APP_API_URL: http://backend:5000/api
     volumes:
       - ./Frontend:/app
+      - /app/node_modules
     networks:
       - real-estate-network
 

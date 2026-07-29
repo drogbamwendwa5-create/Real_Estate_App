@@ -1,84 +1,107 @@
 import React from 'react';
-import { View, FlatList, ScrollView, StyleSheet, RefreshControl, Text } from 'react-native';
-import { Searchbar, Card, Title, Paragraph, Chip, ActivityIndicator } from 'react-native-paper';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useTheme } from '../../Context/ThemeContext';
+import { HeroSearch } from '../../Components/Search/HeroSearch';
+import PropertyCard from '../../Components/Property/PropertyCard';
+import SectionHeader from '../../Components/Home/SectionHeader';
+import ListPropertyFAB from '../../Components/Profile/ListPropertyFAB';
+
+const FEATURED_PROPERTIES = [
+  { id: 1, title: 'Luxury Villa with Pool', price: 1250000, location: 'Beverly Hills, CA', bedrooms: 5, bathrooms: 4, area: 4500, image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6', images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6', 'https://images.unsplash.com/photo-1600596542815-27bfef402323'] },
+  { id: 2, title: 'Modern Apartment Downtown', price: 750000, location: 'Los Angeles, CA', bedrooms: 2, bathrooms: 2, area: 1200, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267', images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'] },
+  { id: 3, title: 'Cozy Family Home', price: 580000, location: 'Pasadena, CA', bedrooms: 3, bathrooms: 3, area: 2200, image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994', images: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994'] },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
-
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    // TODO: Fetch data
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
-
-  React.useEffect(() => {
-    // TODO: Fetch featured properties and categories
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  const { theme } = useTheme();
 
   return (
-    <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Welcome!</Text>
-        <Searchbar
-          style={styles.searchBar}
-          placeholder="Search properties..."
-          onPress={() => router.push('/search')}
-        />
-      </View>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.header}>
+          <Text style={[styles.greeting, { color: theme.colors.text }]}>
+            Discover
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+            Find your dream home with us
+          </Text>
+        </View>
 
-      <Text style={styles.sectionTitle}>Featured Properties</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <Card style={styles.featuredCard} onPress={() => router.push('/property/1')}>
-          <Card.Cover source={{ uri: 'https://via.placeholder.com/300x200' }} />
-          <Title>Luxury Apartment</Title>
-          <Paragraph>$250,000</Paragraph>
-        </Card>
-        <Card style={styles.featuredCard}>
-          <Card.Cover source={{ uri: 'https://via.placeholder.com/300x200' }} />
-          <Title>Modern Villa</Title>
-          <Paragraph>$500,000</Paragraph>
-        </Card>
+        <HeroSearch />
+
+        <View style={styles.section}>
+          <SectionHeader 
+            title="Featured Properties" 
+            onViewAll={() => {}} 
+          />
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.featuredScroll}
+          >
+            {FEATURED_PROPERTIES.map((property) => (
+              <View key={property.id} style={{ width: 280, marginRight: 12 }}>
+                <PropertyCard
+                  property={property}
+                  onPress={() => router.push(`/property/${property.id}`)}
+                  onFavorite={() => {}}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <View style={styles.section}>
+          <SectionHeader 
+            title="Recent Listings" 
+            onViewAll={() => {}} 
+          />
+          {FEATURED_PROPERTIES.map((property) => (
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onPress={() => router.push(`/property/${property.id}`)}
+              onFavorite={() => {}}
+            />
+          ))}
+        </View>
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>Categories</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <Chip style={styles.chip} onPress={() => router.push('/property/categories')}>Apartment</Chip>
-        <Chip style={styles.chip}>House</Chip>
-        <Chip style={styles.chip}>Land</Chip>
-        <Chip style={styles.chip}>Commercial</Chip>
-      </ScrollView>
-
-      <Text style={styles.sectionTitle}>Recent Listings</Text>
-      <Card style={styles.card} onPress={() => router.push('/property/1')}>
-        <Card.Cover source={{ uri: 'https://via.placeholder.com/400x200' }} />
-        <Card.Content>
-          <Title>3 Bedroom Apartment</Title>
-          <Paragraph>$150,000 - Downtown</Paragraph>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+      <ListPropertyFAB onPress={() => router.push('/listing/create')} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 16, backgroundColor: '#fff' },
-  greeting: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
-  searchBar: { elevation: 2 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', margin: 16, marginTop: 8 },
-  featuredCard: { width: 250, marginHorizontal: 8, marginBottom: 8 },
-  chip: { marginHorizontal: 4, marginBottom: 8 },
-  card: { marginHorizontal: 16, marginBottom: 16 },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 90,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  greeting: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+  },
+  section: {
+    marginTop: 20,
+  },
+  featuredScroll: {
+    paddingHorizontal: 16,
+  },
 });

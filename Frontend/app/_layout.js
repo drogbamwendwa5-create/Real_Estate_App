@@ -50,7 +50,13 @@ export default function RootLayout() {
           <PersistGate loading={null} persistor={persistor}>
             <PaperProvider>
               <StatusBar style="auto" />
-              <Stack screenOptions={{ headerShown: false }} />
+              <Stack 
+                screenOptions={{ 
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  animationDuration: 300,
+                }} 
+              />
             </PaperProvider>
           </PersistGate>
         </Provider>

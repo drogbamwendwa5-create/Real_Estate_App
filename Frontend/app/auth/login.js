@@ -33,42 +33,44 @@ export default function LoginScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <Controller
-        control={control}
-        name="email"
-        defaultValue=""
-        rules={{ required: 'Email is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email' } }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Email"
-            value={value}
-            onChangeText={onChange}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            error={!!errors.email}
-            style={styles.input}
-          />
-        )}
-      />
-      {errors.email && <HelperText type="error">{errors.email.message}</HelperText>}
+       <Controller
+         control={control}
+         name="email"
+         defaultValue=""
+         rules={{ required: 'Email is required', pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email' } }}
+         render={({ field: { onChange, value } }) => (
+           <TextInput
+             label="Email"
+             placeholder="Email"
+             value={value}
+             onChangeText={onChange}
+             autoCapitalize="none"
+             keyboardType="email-address"
+             error={!!errors.email}
+             style={styles.input}
+           />
+         )}
+       />
+       {errors.email && <HelperText type="error">{errors.email.message}</HelperText>}
 
-      <Controller
-        control={control}
-        name="password"
-        defaultValue=""
-        rules={{ required: 'Password is required' }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            label="Password"
-            value={value}
-            onChangeText={onChange}
-            secureTextEntry={!showPassword}
-            right={<TextInput.Icon icon={showPassword ? 'eye' : 'eye-off'} onPress={() => setShowPassword(!showPassword)} />}
-            error={!!errors.password}
-            style={styles.input}
-          />
-        )}
-      />
+       <Controller
+         control={control}
+         name="password"
+         defaultValue=""
+         rules={{ required: 'Password is required' }}
+         render={({ field: { onChange, value } }) => (
+           <TextInput
+             label="Password"
+             placeholder="Password"
+             value={value}
+             onChangeText={onChange}
+             secureTextEntry={!showPassword}
+             right={<TextInput.Icon icon={showPassword ? 'eye' : 'eye-off'} onPress={() => setShowPassword(!showPassword)} />}
+             error={!!errors.password}
+             style={styles.input}
+           />
+         )}
+       />
       {errors.password && <HelperText type="error">{errors.password.message}</HelperText>}
 
       <Button mode="contained" style={styles.button} onPress={handleSubmit(onSubmit)} loading={loading}>

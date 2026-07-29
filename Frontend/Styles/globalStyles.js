@@ -1,65 +1,42 @@
-import { StyleSheet } from 'react-native';
-import { COLORS, SIZES, SHADOWS, FONTS } from '../constants';
+import theme from '../theme';
 
-export const globalStyles = StyleSheet.create({
+export const GlobalStyles = {
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: theme.colors.background,
   },
-  screenPadding: {
-    padding: SIZES.padding,
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    ...theme.shadows.md,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  title: {
+    ...theme.typography.h2,
+    marginVertical: theme.spacing.md,
+  },
+  sectionTitle: {
+    ...theme.typography.h3,
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+  },
+  button: {
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  input: {
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.xs,
+  },
+  divider: {
+    marginVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.border,
   },
   center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  shadow: SHADOWS.light,
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radius,
-    ...SHADOWS.light,
-  },
-  input: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.radius,
-    paddingHorizontal: SIZES.padding,
-    paddingVertical: 12,
-    marginBottom: SIZES.margin,
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
-  },
-  button: {
-    borderRadius: SIZES.radius,
-    paddingVertical: 8,
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: SIZES.font,
-    marginBottom: SIZES.margin,
-  },
-  successText: {
-    color: COLORS.success,
-    fontSize: SIZES.font,
-  },
-  heading: {
-    fontSize: SIZES.h2,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    marginBottom: SIZES.margin,
-  },
-  subheading: {
-    fontSize: SIZES.h3,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: SIZES.margin / 2,
-  },
-  body: {
-    fontSize: SIZES.font,
-    color: COLORS.text,
-    lineHeight: 20,
-  },
-});
+};
+
+export default GlobalStyles;
