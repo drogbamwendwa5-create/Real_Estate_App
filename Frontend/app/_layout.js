@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { store, persistor } from '../store';
 import { ThemeProvider, useTheme } from '../Context/ThemeContext';
+import { FeatureFlagProvider } from '../Context/FeatureFlagContext';
 
 // Suppress known third-party deprecation warnings from dependencies
 LogBox.ignoreLogs([
@@ -48,7 +49,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ThemedRoot />
+        <FeatureFlagProvider>
+          <ThemedRoot />
+        </FeatureFlagProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

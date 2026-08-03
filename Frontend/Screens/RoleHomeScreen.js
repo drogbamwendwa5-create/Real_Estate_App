@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
@@ -122,7 +124,7 @@ const canonicalRole = role => ({
   agent: 'agency-professional',
 }[role] || role || 'guest');
 
-const firstName = user => (user?.name || 'there').trim().split(' ')[0];
+const firstName = user => (user?.name || 'there').trim().split(' ')[0];       
 
 function StatCard({ label, value, icon, accent, theme }) {
   return (
@@ -161,6 +163,98 @@ function ActionCard({ action, meta, theme, onPress }) {
   );
 }
 
+const FRAMES = [
+  require('../assets/hero_frame5.jpg'),
+  require('../assets/hero_frame6.jpg'),
+  require('../assets/hero_frame1.jpg'),
+  require('../assets/hero_frame2.jpg'),
+  require('../assets/hero_frame7.jpg'),
+  require('../assets/hero_frame3.jpg'),
+  require('../assets/hero_frame8.jpg'),
+  require('../assets/hero_frame4.jpg'),
+];
+
+const FRAME_SCROLL = 350;
+const CYCLE_LENGTH = FRAMES.length * FRAME_SCROLL;
+const OVERLAP = FRAME_SCROLL * 0.4;
+
+const buildFrameOpacity = (i, scrollY) => {
+  const fadeInStart = Math.max(0, i * FRAME_SCROLL - OVERLAP);
+  const peakStart = i * FRAME_SCROLL;
+  const peakEnd = i * FRAME_SCROLL + OVERLAP;
+  const fadeOutEnd = (i + 1) * FRAME_SCROLL;
+  if (i === 0) {
+    return scrollY.interpolate({
+      inputRange: [0, peakEnd, fadeOutEnd],
+      outputRange: [1, 1, 0],
+      extrapolate: 'clamp',
+    });
+  }
+  if (i === FRAMES.length - 1) {
+    return scrollY.interpolate({
+      inputRange: [fadeInStart, peakStart],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    });
+  }
+  return scrollY.interpolate({
+    inputRange: [fadeInStart, peakStart, peakEnd, fadeOutEnd],
+    outputRange: [0, 1, 1, 0],
+    extrapolate: 'clamp',
+  });
+};
+
+const FullScreenBackground = ({ scrollY, accent }) => {
+  const kbScale = useRef(new Animated.Value(1)).current;
+  const kbX = useRef(new Animated.Value(0)).current;
+  const kbY = useRef(new Animated.Value(0)).current;
+  const loopScrollY = useRef(Animated.modulo(scrollY, CYCLE_LENGTH)).current;
+
+  useEffect(() => {
+    const run = (flip = false) => {
+      Animated.parallel([
+        Animated.timing(kbScale, { toValue: flip ? 1 : 1.08, duration: 9000, useNativeDriver: true }),
+        Animated.timing(kbX, { toValue: flip ? 0 : (Math.random() - 0.5) * 24, duration: 9000, useNativeDriver: true }),
+        Animated.timing(kbY, { toValue: flip ? 0 : (Math.random() - 0.5) * 14, duration: 9000, useNativeDriver: true }),
+      ]).start(({ finished }) => { if (finished) run(!flip); });
+    };
+    run();
+  }, []);
+
+  const overlayDark = loopScrollY.interpolate({
+    inputRange: [0, CYCLE_LENGTH],
+    outputRange: [0.45, 0.78],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <View style={StyleSheet.absoluteFill}>
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { transform: [{ scale: kbScale }, { translateX: kbX }, { translateY: kbY }] },
+        ]}
+      >
+        {FRAMES.map((src, i) => (
+          <Animated.Image
+            key={i}
+            source={src}
+            style={[StyleSheet.absoluteFill, styles.bgFrame, { opacity: buildFrameOpacity(i, loopScrollY) }]}
+            resizeMode="cover"
+          />
+        ))}
+      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: overlayDark }]} pointerEvents="none">
+        <LinearGradient
+          colors={['rgba(2,2,15,0.3)', 'rgba(2,2,15,0.55)', 'rgba(2,2,15,0.88)']}
+          locations={[0, 0.45, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+    </View>
+  );
+};
+
 export default function RoleHomeScreen() {
   const { theme } = useTheme();
   const router = useRouter();
@@ -173,6 +267,7 @@ export default function RoleHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const loadDashboard = useCallback(async () => {
     setError('');
@@ -239,12 +334,17 @@ export default function RoleHomeScreen() {
     ];
   }, [role, stats]);
 
+  const isBuyer = role === 'buyer-tenant' || role === 'guest';
+
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      <ScrollView
+      {isBuyer && <FullScreenBackground scrollY={scrollY} accent={meta.accent} />}
+      <Animated.ScrollView
         contentInsetAdjustmentBehavior="automatic"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboard(); }} tintColor={meta.accent} />}
         contentContainerStyle={[styles.content, { paddingHorizontal: width < 390 ? 16 : 20 }]}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        scrollEventThrottle={16}
       >
         <View style={styles.topRow}>
           <View style={styles.identity}>
@@ -310,7 +410,7 @@ export default function RoleHomeScreen() {
         </View>
 
         <Text style={[styles.footerHint, { color: theme.colors.textSecondary }]}>Your dashboard adapts to your permissions.</Text>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
@@ -318,6 +418,7 @@ export default function RoleHomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { paddingTop: 18, paddingBottom: 120, gap: 18 },
+  bgFrame: { width: '100%', height: '100%' },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },

@@ -28,11 +28,15 @@ import {
 const canonicalRole = role => ({ user: 'buyer-tenant', agent: 'agency-professional' }[role] || role || 'guest');
 
 const FLAG_LABELS = {
-  enableMapSearch: 'Map search',
-  enableChat: 'In-app chat',
-  enableAggregatedListings: 'Aggregated listings',
-  enableVerification: 'Verification flows',
-  enablePayments: 'Payments',
+  enableVirtualTours: 'Virtual tours',
+  enableInvestmentScores: 'Investment scores',
+  enableAIModeration: 'AI moderation',
+  enableGeospatialEnrichment: 'Geospatial enrichment',
+  enableFraudDetection: 'Fraud detection',
+  enableBiddingSystem: 'Bidding system',
+  enableSubscriptionPayments: 'Subscription payments',
+  enableEmailNotifications: 'Email notifications',
+  enableSMSNotifications: 'SMS notifications',
   maintenanceMode: 'Maintenance mode',
 };
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Card, Title, Paragraph, Text, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../Context/ThemeContext';
 import { formatLocation } from '../../Utils/helpers';
 
@@ -52,8 +53,20 @@ export default function SavedPropertiesScreen() {
   return (
     <View style={styles.container}>
       <Surface style={styles.header}>
-        <Title style={styles.headerTitle}>Saved Properties</Title>
-        <Paragraph style={styles.headerSubtitle}>Your favourite listings</Paragraph>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+          <View style={styles.headerText}>
+            <Title style={styles.headerTitle}>Saved Properties</Title>
+            <Paragraph style={styles.headerSubtitle}>Your favourite listings</Paragraph>
+          </View>
+        </View>
       </Surface>
       <FlatList
         data={favourites}
@@ -84,6 +97,21 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.surface,
     ...theme.shadows.sm,
     marginBottom: theme.spacing.md,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.sm,
+  },
+  headerText: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,

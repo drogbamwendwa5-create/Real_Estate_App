@@ -18,6 +18,7 @@ const securityMiddleware = require('./Middleware/security');
 const { generalLimiter } = require('./Middleware/rateLimiter');
 const logger = require('./Middleware/logger');
 const errorHandler = require('./Middleware/errorHandler');
+const { maintenanceMode, attachFeatureFlags } = require('./Middleware/featureFlags');
 
 // Initialize Express app
 const app = express();
@@ -72,6 +73,10 @@ app.use(logger());
 
 // Rate limiter
 app.use(generalLimiter);
+
+// Feature flags middleware (attach flags to all requests, enforce maintenance mode)
+app.use(attachFeatureFlags);
+app.use(maintenanceMode);
 
 // Mount routes
 app.use('/api/auth', authRoutes);
