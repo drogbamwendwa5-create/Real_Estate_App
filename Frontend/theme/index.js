@@ -9,7 +9,7 @@ export const getTheme = (isDarkMode) => {
     info: '#3B82F6',
     overlay: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
     card: isDarkMode ? '#1E1E1E' : '#FFFFFF',
-    background: isDarkMode ? '#121212' : '#F8FAFC',
+    background: isDarkMode ? '#000000' : '#F8FAFC',
     surface: isDarkMode ? '#1E1E1E' : '#FFFFFF',
     error: '#DC2626',
     text: isDarkMode ? '#FFFFFF' : '#000000',

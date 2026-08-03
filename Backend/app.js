@@ -19,6 +19,9 @@ const { generalLimiter } = require('./Middleware/rateLimiter');
 const logger = require('./Middleware/logger');
 const errorHandler = require('./Middleware/errorHandler');
 
+// Initialize Express app
+const app = express();
+
 // Route imports
 const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/userRoutes');
@@ -30,9 +33,17 @@ const messageRoutes = require('./Routes/messageRoutes');
 const notificationRoutes = require('./Routes/notificationRoutes');
 const subscriptionRoutes = require('./Routes/subscriptionRoutes');
 const adminRoutes = require('./Routes/adminRoutes');
+const superAdminRoutes = require('./Routes/superAdminRoutes');
 const uploadRoutes = require('./Routes/uploadRoutes');
-
-const app = express();
+// Property aggregation routes
+const propertyAggregationRoutes = require('./property-aggregation/api/propertyAggregationRoutes');
+// Map / geospatial routes (OpenStreetMap)
+const mapRoutes = require('./Routes/MapRoutes');
+const verificationRoutes = require('./Routes/verificationRoutes');
+const reportRoutes = require('./Routes/reportRoutes');
+const roleRoutes = require('./Routes/roleRoutes');
+const activityRoutes = require('./Routes/activityRoutes');
+const { seedRbac } = require('./Services/rbacService');
 
 // Connect to database
 connectDB();
@@ -40,10 +51,13 @@ connectDB();
 // Configure Cloudinary
 configureCloudinary();
 
-// Security middleware
-// Note: xss-clean and express-mongo-sanitize are incompatible with Express 5
-// (req.query is read-only) and hang/crash requests. Mongoose sanitizeFilter
-// covers NoSQL injection; validators cover input shape.
+// Seed default categories
+const seedCategories = require('./seed/categorySeed');
+seedCategories();
+seedRbac().catch(error => console.warn('[RBAC] Seed skipped:', error.message));
+// Seed sample properties (upserts)
+const seedProperties = require('./seed/propertySeed');
+seedProperties();
 app.use(securityHeaders());
 app.use(cors(corsOptions));
 app.use(securityMiddleware.hpp);
@@ -70,7 +84,17 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/upload', uploadRoutes);
+// Mount property aggregation routes (independent module)
+app.use('/api/property-aggregation', propertyAggregationRoutes);
+// Mount map / geospatial routes (OpenStreetMap)
+app.use('/api/maps', mapRoutes);
+app.use('/api/verification', verificationRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/profiles', userRoutes);
 
 // Default route
 app.get('/api', (req, res) => {
@@ -83,5 +107,17 @@ app.get('/api', (req, res) => {
 
 // Error handler
 app.use(errorHandler);
+
+// Property aggregation scheduler
+if (process.env.ENABLE_PROPERTY_AGGREGATION === "true") {
+  try {
+    const propertyScheduler = require("./property-aggregation/jobs");
+    app.locals.propertyScheduler = propertyScheduler;
+    app.locals.startPropertyScheduler = () => propertyScheduler.start();
+    console.log("[App] Property aggregation module loaded");
+  } catch (e) {
+    console.warn("[App] Property aggregation module failed to load:", e.message);
+  }
+}
 
 module.exports = app;

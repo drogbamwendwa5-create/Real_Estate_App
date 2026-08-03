@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, TextInput, ActivityIndicator } from 'react-native';
 import { Button, List, Avatar } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function ChatScreen() {
   const router = useRouter();
-  const { id } = router.query;
+  const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -13,6 +13,7 @@ export default function ChatScreen() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        if (!id) return;
         const response = await fetch(`http://localhost:5000/api/messages/${id}`);
         const data = await response.json();
         setMessages(data.data || []);
@@ -22,7 +23,11 @@ export default function ChatScreen() {
         setLoading(false);
       }
     };
-    if (id) fetchMessages();
+    if (id) {
+      fetchMessages();
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const sendMessage = async () => {

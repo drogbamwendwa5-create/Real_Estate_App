@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
-import theme from '../../../../theme';
+import { useTheme } from '../../../../Context/ThemeContext';
 
 export default function MyListingsLayout() {
+  const { theme } = useTheme();
   return (
     <Stack
       screenOptions={{

@@ -6,6 +6,8 @@ import propertyReducer from './slices/propertySlice';
 import uiReducer from './slices/uiSlice';
 import favouriteReducer from './slices/favouriteSlice';
 import messageReducer from './slices/messageSlice';
+import aggregationReducer from './slices/aggregationSlice';
+import mapReducer from './slices/mapSlice';
 
 const persistConfig = {
   key: 'root',
@@ -19,6 +21,8 @@ const rootReducer = combineReducers({
   ui: uiReducer,
   favourite: favouriteReducer,
   message: messageReducer,
+  aggregation: aggregationReducer,
+  map: mapReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

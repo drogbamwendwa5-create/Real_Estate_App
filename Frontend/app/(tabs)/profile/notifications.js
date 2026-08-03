@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
-import { List, Button, Chip } from 'react-native-paper';
+import { List, Chip, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../../Context/ThemeContext';
+import NotificationService from '../../../Services/api/notificationService';
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/notifications');
-        const data = await response.json();
-        setNotifications(data.data || []);
+        const response = await NotificationService.getNotifications();
+        const data = response?.data || response || [];
+        setNotifications(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching notifications:', error);
+        setNotifications([]);
       } finally {
         setLoading(false);
       }
@@ -26,44 +30,72 @@ export default function NotificationsScreen() {
 
   const markAsRead = (id) => {
     setNotifications((prev) =>
-      prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n._id === id || n.id === id ? { ...n, read: true } : n))
     );
   };
 
   const renderItem = ({ item }) => (
-    <List.Item
-      title={item.title}
-      description={item.message}
-      left={(props) => <List.Icon {...props} icon={item.read ? 'bell-outline' : 'bell'} />}
-      right={(props) => <Chip style={styles.chip}>{item.type}</Chip>}
-      style={[styles.item, !item.read && styles.unreadItem]}
-      onPress={() => markAsRead(item._id)}
-    />
+    <Surface
+      style={[
+        styles.item,
+        {
+          backgroundColor: item.read ? theme.colors.surface : (theme.colors.primary + '15'),
+          borderColor: theme.colors.border,
+        },
+      ]}
+    >
+      <TouchableOpacity onPress={() => markAsRead(item._id || item.id)}>
+        <List.Item
+          title={item.title}
+          titleStyle={{ color: theme.colors.text, fontWeight: item.read ? '500' : '700' }}
+          description={item.message}
+          descriptionStyle={{ color: theme.colors.textSecondary }}
+          left={(props) => (
+            <List.Icon
+              {...props}
+              icon={item.read ? 'bell-outline' : 'bell'}
+              color={theme.colors.primary}
+            />
+          )}
+          right={(props) => (
+            <Chip
+              style={[styles.chip, { backgroundColor: theme.colors.primary + '20' }]}
+              textStyle={{ color: theme.colors.primary, fontSize: 11 }}
+            >
+              {item.type || 'info'}
+            </Chip>
+          )}
+        />
+      </TouchableOpacity>
+    </Surface>
   );
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
+      <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#2563EB" />
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Notifications</Text>
       </View>
       <FlatList
         data={notifications}
         renderItem={renderItem}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item, index) => (item._id || item.id || index).toString()}
         contentContainerStyle={styles.listContent}
+        scrollEnabled={false}
         ListEmptyComponent={
-          <Text style={styles.empty}>No notifications</Text>
+          <Text style={[styles.empty, { color: theme.colors.textSecondary }]}>
+            No notifications yet
+          </Text>
         }
       />
     </ScrollView>
@@ -71,24 +103,43 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   backButton: {
     marginRight: 12,
     padding: 4,
   },
-  title: { fontSize: 20, fontWeight: '700', color: '#000' },
-  listContent: { padding: 16 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  item: { backgroundColor: '#fff', marginBottom: 8 },
-  unreadItem: { backgroundColor: '#EFF6FF' },
-  chip: { alignSelf: 'flex-start' },
-  empty: { textAlign: 'center', marginTop: 32, color: '#64748B' },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  listContent: {
+    padding: 16,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  item: {
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  chip: {
+    alignSelf: 'center',
+  },
+  empty: {
+    textAlign: 'center',
+    marginTop: 48,
+    fontSize: 16,
+  },
 });

@@ -1,0 +1,1 @@
+class V{validate(d){const e=[];if(!d.title||d.title.length<5)e.push("Missing title");if(!d.price||parseFloat(String(d.price).replace(/[^0-9.]/g,""))<=0)e.push("Missing price");if(!d.sourceURL)e.push("Missing URL");if(!d.images||d.images.length===0)e.push("Missing images");return{isValid:e.length===0,errors:e,data:d};}}module.exports=V;

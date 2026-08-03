@@ -39,7 +39,7 @@ export default function ScheduleViewingScreen() {
             </Paragraph>
             <Button 
               mode="contained" 
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
               style={[styles.button, { backgroundColor: theme.colors.primary }]}
             >
               Back to Property
@@ -127,7 +127,7 @@ export default function ScheduleViewingScreen() {
               style={[styles.input, { backgroundColor: theme.colors.surface }]}
               outlineColor={theme.colors.border}
               activeOutlineColor={theme.colors.primary}
-              left={<TextInput.Icon icon="person" color={theme.colors.textSecondary} />}
+              left={<TextInput.Icon icon="account" color={theme.colors.textSecondary} />}
             />
           </View>
 

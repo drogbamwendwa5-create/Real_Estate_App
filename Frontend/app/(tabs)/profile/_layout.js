@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
-import theme from '../../../theme';
+import { useTheme } from '../../../Context/ThemeContext';
 
 export default function ProfileLayout() {
+  const { theme } = useTheme();
   return (
     <Stack
       screenOptions={{
@@ -22,11 +23,11 @@ export default function ProfileLayout() {
         },
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen 
         name="my-listings" 
         options={{ 
-          headerShown: true,
+          headerShown: false,
           title: 'My Listings',
           headerBackTitle: 'Profile',
         }} 
@@ -34,7 +35,6 @@ export default function ProfileLayout() {
       <Stack.Screen 
         name="edit" 
         options={{ 
-          headerShown: true,
           title: 'Edit Profile',
           headerBackTitle: 'Profile',
         }} 
@@ -42,7 +42,6 @@ export default function ProfileLayout() {
       <Stack.Screen 
         name="settings" 
         options={{ 
-          headerShown: true,
           title: 'Settings',
           headerBackTitle: 'Profile',
         }} 
@@ -50,7 +49,6 @@ export default function ProfileLayout() {
       <Stack.Screen 
         name="notifications" 
         options={{ 
-          headerShown: true,
           title: 'Notifications',
           headerBackTitle: 'Profile',
         }} 
@@ -58,7 +56,6 @@ export default function ProfileLayout() {
       <Stack.Screen 
         name="help" 
         options={{ 
-          headerShown: true,
           title: 'Help & Support',
           headerBackTitle: 'Profile',
         }} 
@@ -66,9 +63,23 @@ export default function ProfileLayout() {
       <Stack.Screen 
         name="about" 
         options={{ 
-          headerShown: true,
           title: 'About',
           headerBackTitle: 'Profile',
+        }} 
+      />
+      <Stack.Screen 
+        name="change-password" 
+        options={{ 
+          title: 'Change Password',
+          headerBackTitle: 'Profile',
+        }} 
+      />
+      <Stack.Screen 
+        name="delete-account" 
+        options={{ 
+          title: 'Delete Account',
+          headerBackTitle: 'Profile',
+          presentation: 'modal',
         }} 
       />
     </Stack>

@@ -11,12 +11,6 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Settings</Text>
-      </View>
 
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
@@ -89,9 +83,9 @@ export default function SettingsScreen() {
           ACCOUNT
         </Text>
         <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('edit')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/profile/edit')}>
             <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-              <Icon name="account-edit" size={22} color={theme.colors.primary} />
+              <Icon name="person-outline" size={22} color={theme.colors.primary} />
             </View>
             <View style={styles.menuContent}>
               <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
@@ -106,9 +100,9 @@ export default function SettingsScreen() {
 
           <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.error + '20' }]}>
-              <Icon name="lock-reset" size={22} color={theme.colors.error} />
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/profile/change-password')}>
+            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
+              <Icon name="lock-closed-outline" size={22} color={theme.colors.primary} />
             </View>
             <View style={styles.menuContent}>
               <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
@@ -123,12 +117,12 @@ export default function SettingsScreen() {
 
           <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => {}}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/(tabs)/profile/delete-account')}>
             <View style={[styles.iconContainer, { backgroundColor: theme.colors.error + '20' }]}>
-              <Icon name="delete" size={22} color={theme.colors.error} />
+              <Icon name="trash-outline" size={22} color={theme.colors.error} />
             </View>
             <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
+              <Text style={[styles.menuTitle, { color: theme.colors.error }]}>
                 Delete Account
               </Text>
               <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>

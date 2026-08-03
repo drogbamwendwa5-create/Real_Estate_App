@@ -1,36 +1,94 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { TextInput, Button, Text, Surface } from 'react-native-paper';
+import * as ImagePicker from 'expo-image-picker';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUser } from '../../../store/slices/authSlice';
 import { useTheme } from '../../../Context/ThemeContext';
 import Icon from 'react-native-vector-icons/Ionicons';
+import UserService from '../../../Services/api/userService';
+import { updateUserDetails } from '../../../Services/api';
+import { useAuth } from '../../../Hooks/useAuth';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { theme } = useTheme();
-  const { control, handleSubmit } = useForm();
+  const { user: hookUser, setUser } = useAuth();
+  const reduxUser = useSelector((state) => state.auth.user);
+  const user = reduxUser || hookUser;
+  const [avatar, setAvatar] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const { control, handleSubmit, reset } = useForm({ defaultValues: { name: '', email: '', phone: '', bio: '' } });
 
-  const onSubmit = (data) => {
-    console.log(data);
-    router.back();
+  useEffect(() => {
+    reset({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', bio: user?.bio || '' });
+  }, [user, reset]);
+
+  const pickAvatar = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission required', 'Allow photo library access to choose a profile picture.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.[0]) setAvatar(result.assets[0]);
+  };
+
+  const onSubmit = async (data) => {
+    setSaving(true);
+    try {
+      const profileResponse = await updateUserDetails(data);
+      let updatedUser = profileResponse.data;
+
+      if (avatar) {
+        const formData = new FormData();
+        formData.append('image', {
+          uri: avatar.uri,
+          name: avatar.fileName || `avatar-${Date.now()}.jpg`,
+          type: avatar.mimeType || 'image/jpeg',
+        });
+        const avatarResponse = await UserService.uploadAvatar(formData);
+        updatedUser = { ...updatedUser, avatar: avatarResponse.data };
+      }
+
+      setUser(updatedUser);
+      dispatch(updateUser(updatedUser));
+      Alert.alert('Success', 'Profile updated successfully');
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/profile');
+      }
+    } catch (error) {
+      Alert.alert('Error', error?.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Edit Profile</Text>
-      </View>
 
       <Surface style={[styles.avatarSection, { backgroundColor: theme.colors.surface }]}>
         <View style={styles.avatarContainer}>
-          <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
-            <Text style={styles.avatarText}>JD</Text>
-          </View>
-          <TouchableOpacity style={[styles.editAvatarButton, { backgroundColor: theme.colors.primary }]}>
+          {avatar?.uri || user?.avatar?.url ? (
+            <Image source={{ uri: avatar?.uri || user.avatar.url }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}> 
+              <Text style={styles.avatarText}>{(user?.name || 'User').slice(0, 2).toUpperCase()}</Text>
+            </View>
+          )}
+          <TouchableOpacity onPress={pickAvatar} style={[styles.editAvatarButton, { backgroundColor: theme.colors.primary }]}>
             <Icon name="camera" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -119,10 +177,12 @@ export default function EditProfileScreen() {
         <Button 
           mode="contained" 
           onPress={handleSubmit(onSubmit)}
+          loading={saving}
+          disabled={saving}
           style={[styles.button, { backgroundColor: theme.colors.primary }]}
           contentStyle={styles.buttonContent}
         >
-          Save Changes
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </View>
     </ScrollView>

@@ -3,6 +3,7 @@ import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card, Title, Paragraph, Text, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../Context/ThemeContext';
+import { formatLocation } from '../../Utils/helpers';
 
 export default function SavedPropertiesScreen() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function SavedPropertiesScreen() {
         <Paragraph style={styles.price}>${item.price?.toLocaleString()}</Paragraph>
         <View style={styles.locationRow}>
           <Text style={styles.icon}>📍</Text>
-          <Text style={styles.location}>{item.location || 'Unknown location'}</Text>
+          <Text style={styles.location}>{formatLocation(item.location, item.address)}</Text>
         </View>
       </Card.Content>
     </Card>

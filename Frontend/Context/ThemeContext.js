@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { customDarkTheme, customLightTheme } from '../Config/theme';
 import { getTheme } from '../theme';
 
 const ThemeContext = createContext();
@@ -30,7 +30,7 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  const paperTheme = isDarkMode ? MD3DarkTheme : MD3LightTheme;
+  const paperTheme = isDarkMode ? customDarkTheme : customLightTheme;
   const theme = getTheme(isDarkMode);
 
   return (

@@ -43,7 +43,7 @@ export default function VirtualTourScreen() {
             </Paragraph>
             <Button 
               mode="contained" 
-              onPress={() => router.back()}
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
               style={[styles.button, { backgroundColor: theme.colors.primary }]}
             >
               Back to Property

@@ -15,13 +15,16 @@ export const PROPERTY_STATUS = [
 export const AMENITIES = [
   'Pool', 'Gym', 'Parking', 'Garden', 'Security',
   'Elevator', 'Balcony', 'Terrace', 'Garage', 'Wifi',
-  'Air Conditioning', 'Heating', 'Laundry', 'Storage',
+  'Air Conditioning', 'Water Tank', 'Generator', 'Solar',
+  'Borehole', 'CCTV', 'Electric Fence', 'Servant Quarters',
 ];
 
 export const FEATURES = [
-  'Modern Kitchen', 'Hardwood Floors', 'High Ceilings',
-  'City View', 'Water View', 'Mountain View', 'Fireplace',
+  'Modern Kitchen', 'Tiled Floors', 'High Ceilings',
+  'City View', 'Mountain View', 'Garden View', 'Fireplace',
   'Solar Panels', 'Smart Home', 'Jacuzzi',
+  'Rooftop Terrace', 'En-suite Bedrooms', 'Walk-in Closet',
+  'DSQ (Domestic Servant Quarters)', 'Carport',
 ];
 
 export const SORT_OPTIONS = [
@@ -32,9 +35,9 @@ export const SORT_OPTIONS = [
 ];
 
 export const PRICE_RANGES = [
-  { id: '1', label: '$50,000 - $100,000', min: 50000, max: 100000 },
-  { id: '2', label: '$100,000 - $250,000', min: 100000, max: 250000 },
-  { id: '3', label: '$250,000 - $500,000', min: 250000, max: 500000 },
-  { id: '4', label: '$500,000 - $1,000,000', min: 500000, max: 1000000 },
-  { id: '5', label: '$1,000,000+', min: 1000000, max: null },
+  { id: '1', label: 'KSh 1M - KSh 5M', min: 1000000, max: 5000000 },
+  { id: '2', label: 'KSh 5M - KSh 10M', min: 5000000, max: 10000000 },
+  { id: '3', label: 'KSh 10M - KSh 25M', min: 10000000, max: 25000000 },
+  { id: '4', label: 'KSh 25M - KSh 50M', min: 25000000, max: 50000000 },
+  { id: '5', label: 'KSh 50M+', min: 50000000, max: null },
 ];

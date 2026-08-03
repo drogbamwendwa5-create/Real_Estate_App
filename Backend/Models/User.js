@@ -33,13 +33,47 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'agent', 'admin'],
+    enum: ['user', 'agent', 'admin', 'super-admin', 'agency-professional', 'property-owner', 'buyer-tenant', 'guest'],
     default: 'user',
   },
   isVerified: {
     type: Boolean,
     default: false,
   },
+  canonicalRole: {
+    type: String,
+    enum: ['super-admin', 'admin', 'agency-professional', 'property-owner', 'buyer-tenant', 'guest'],
+    default: 'buyer-tenant',
+    index: true,
+  },
+  profile: {
+    displayName: String,
+    coverPhoto: { public_id: String, url: String },
+    bio: { type: String, maxlength: 2000 },
+    languages: [String],
+    country: String,
+    county: String,
+    city: String,
+    address: String,
+    company: String,
+    website: String,
+    socialLinks: { type: Map, of: String },
+  },
+  professionalVerification: {
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'expired'], default: 'pending' },
+    verifiedAt: Date,
+    expiresAt: Date,
+  },
+  ownerVerification: {
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'expired'], default: 'pending' },
+    verifiedAt: Date,
+    expiresAt: Date,
+  },
+  onlineStatus: { type: String, enum: ['online', 'offline', 'away'], default: 'offline' },
+  lastSeenAt: Date,
+  loginCount: { type: Number, default: 0 },
+  failedLoginCount: { type: Number, default: 0 },
+  suspendedAt: Date,
   isActive: {
     type: Boolean,
     default: true,
@@ -53,6 +87,12 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
+const ROLE_CANONICAL = { user: 'buyer-tenant', agent: 'agency-professional' };
+
+UserSchema.pre('validate', function () {
+  const expected = ROLE_CANONICAL[this.role] || this.role;
+  if (this.canonicalRole !== expected) this.canonicalRole = expected;
+});
 UserSchema.pre('save', async function () {
   if (!this.isModified('password')) {
     return;
@@ -66,7 +106,7 @@ UserSchema.methods.comparePassword = async function (enteredPassword) {
 };
 
 UserSchema.methods.generateJWT = function () {
-  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
+  return jwt.sign({ id: this._id, role: this.role, canonicalRole: this.canonicalRole }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 };

@@ -1,0 +1,1 @@
+class APIErrorLogger{log(m,d){console.log("[API] "+m,d);}logError(ep,err,ctx){console.error("[API] ERROR at "+ep+":",err.message,ctx);}logWarning(m,d){console.warn("[API] WARNING: "+m,d);}logDatabaseError(op,err,ctx){console.error("[API] DB ERROR in "+op+":",err.message,ctx);}}module.exports=APIErrorLogger;

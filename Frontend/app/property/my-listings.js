@@ -3,6 +3,8 @@ import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card, Title, Paragraph, Text, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../Context/ThemeContext';
+import { formatLocation } from '../../Utils/helpers';
+import { getMyProperties } from '../../Services/api';
 
 export default function MyListingsScreen() {
   const router = useRouter();
@@ -14,8 +16,7 @@ export default function MyListingsScreen() {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/properties/my-properties');
-        const data = await response.json();
+        const data = await getMyProperties();
         setProperties(data.data || []);
       } catch (error) {
         console.error('Error fetching properties:', error);
@@ -34,7 +35,7 @@ export default function MyListingsScreen() {
         <Paragraph style={styles.price}>${item.price?.toLocaleString()}</Paragraph>
         <View style={styles.locationRow}>
           <Text style={styles.icon}>📍</Text>
-          <Text style={styles.location}>{item.location}</Text>
+          <Text style={styles.location}>{formatLocation(item.location, item.address)}</Text>
         </View>
       </Card.Content>
     </Card>

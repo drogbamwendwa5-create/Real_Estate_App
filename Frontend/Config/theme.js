@@ -25,7 +25,7 @@ export const customDarkTheme = {
     primary: '#60A5FA',
     secondary: '#34D399',
     accent: '#FBBF24',
-    background: '#0F172A',
+    background: '#000000',
     surface: '#1E293B',
     text: '#F1F5F9',
     error: '#EF4444',

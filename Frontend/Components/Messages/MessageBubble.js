@@ -8,8 +8,10 @@ export const MessageBubble = ({ message, onPress, style }) => {
 
   if (!message) return null;
 
-  const formatTime = (timestamp) => {
+  const formatTime = (timestamp, fallback) => {
+    if (!timestamp) return fallback || 'Now';
     const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return fallback || 'Now';
     const now = new Date();
     const diff = now - date;
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -40,7 +42,7 @@ export const MessageBubble = ({ message, onPress, style }) => {
             {message.sender || message.name || 'Agent'}
           </Text>
           <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
-            {formatTime(message.timestamp || message.createdAt)}
+            {formatTime(message.timestamp || message.createdAt, message.time)}
           </Text>
         </View>
         

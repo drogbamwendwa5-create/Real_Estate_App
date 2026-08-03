@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, StyleSheet, Alert, Animated } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
 import { register } from '../../Services/api';
+import { FullScreenBackground } from '../../Screens/LegacyHomeScreen';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const scrollY = React.useRef(new Animated.Value(0)).current;
   const { control, handleSubmit, formState: { errors }, watch } = useForm();
   const password = watch('password');
 
@@ -32,7 +34,10 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.root}>
+      <FullScreenBackground scrollY={scrollY} autoPlay duration={30000} />
+      <Animated.ScrollView onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })} scrollEventThrottle={16} contentContainerStyle={styles.container}>
+      <View style={styles.card}>
       <Text style={styles.title}>Create Account</Text>
       <Controller control={control} name="name" defaultValue="" rules={{ required: 'Name is required' }} render={({ field: { onChange, value } }) => (
         <TextInput label="Full Name" value={value} onChangeText={onChange} error={!!errors.name} style={styles.input} />
@@ -65,14 +70,18 @@ export default function RegisterScreen() {
       <Text style={styles.link} onPress={() => router.push('/auth/login')}>
         Already have an account? Sign In
       </Text>
-    </ScrollView>
+        </View>
+      </Animated.ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
+  root: { flex: 1, backgroundColor: '#050510' },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: 50, paddingBottom: 50 },
+  card: { borderRadius: 24, padding: 20, backgroundColor: 'rgba(5, 5, 16, 0.76)' },
+  title: { color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   input: { marginBottom: 4 },
   button: { marginTop: 16, paddingVertical: 8 },
-  link: { color: '#2563EB', textAlign: 'center', marginTop: 12, fontSize: 14 },
+  link: { color: '#BFDBFE', textAlign: 'center', marginTop: 12, fontSize: 14 },
 });

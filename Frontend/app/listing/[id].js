@@ -30,15 +30,15 @@ export default function ListingDetailScreen() {
         await new Promise(resolve => setTimeout(resolve, 500));
         const data = {
           id: id,
-          title: 'Luxury Villa with Pool',
-          price: 1250000,
-          location: 'Beverly Hills, CA',
-          description: 'Stunning luxury villa with panoramic views, private pool, and world-class amenities.',
+          title: 'Luxury Villa with Pool - Runda',
+          price: 85000000,
+          location: 'Runda, Nairobi',
+          description: 'Stunning luxury villa in Runda with panoramic views, private pool, and world-class amenities.',
           bedrooms: 5,
           bathrooms: 4,
-          area: 4500,
+          area: 450,
           propertyType: 'villa',
-          amenities: ['WiFi', 'Pool', 'Gym', 'Security', 'Parking'],
+          amenities: ['WiFi', 'Pool', 'Gym', 'Security', 'Parking', 'Generator', 'Water Tank'],
           status: 'active',
           views: 234,
           inquiries: 12,
@@ -74,7 +74,7 @@ export default function ListingDetailScreen() {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.errorText, { color: theme.colors.error }]}>Listing not found</Text>
-        <Button mode="contained" onPress={() => router.back()}>Go Back</Button>
+        <Button mode="contained" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}>Go Back</Button>
       </View>
     );
   }
@@ -99,7 +99,7 @@ export default function ListingDetailScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.backButton}>
             <Icon name="arrow-back" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: theme.colors.text }]}>
@@ -152,7 +152,7 @@ export default function ListingDetailScreen() {
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 12 }]}>
-              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Price ($)</Text>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Price (KSh)</Text>
               <TextInput
                 mode="outlined"
                 value={price}
@@ -223,7 +223,7 @@ export default function ListingDetailScreen() {
               />
             </View>
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Area (m²)</Text>
+              <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Area (m2)</Text>
               <TextInput
                 mode="outlined"
                 value={area}

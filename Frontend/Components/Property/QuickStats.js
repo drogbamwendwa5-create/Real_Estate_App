@@ -25,8 +25,9 @@ export const QuickStats = ({ bedrooms, bathrooms, area, parking, style }) => {
       {area && (
         <View style={styles.statItem}>
           <Icon name="resize" size={22} color={theme.colors.primary} />
-          <Text style={[styles.statValue, { color: theme.colors.text }]}>{area}</Text>
-          <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>m²</Text>
+          <Text style={[styles.statValue, { color: theme.colors.text }]}>
+            {area} m2
+          </Text>
         </View>
       )}
       {parking && (

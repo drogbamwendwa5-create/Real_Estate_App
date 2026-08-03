@@ -3,8 +3,8 @@ const allowedOrigins = [
   'http://localhost:19006',
   'http://localhost:19000',
   'http://localhost:8080',
-  'http://192.168.0.29:8081',
-  'http://192.168.0.29:19006',
+  'http:// 192.168.0.29:8081',
+  'http:// 192.168.0.29:19006',
 ];
 
 // Also allow any localhost origin for development

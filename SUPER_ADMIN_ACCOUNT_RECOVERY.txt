@@ -1,0 +1,61 @@
+REAL ESTATE APP
+SUPER ADMIN ACCOUNT DEACTIVATION AND RECOVERY
+================================================
+
+1. Deactivating a regular user account
+---------------------------------------
+
+1. Sign in as an Admin or Super Admin.
+2. Open Control Center.
+3. Open the Users section.
+4. Find the user by name, email, or role.
+5. Select Suspend.
+6. The user will no longer be able to access protected pages.
+7. To restore access, select Activate for that user.
+
+2. Super Admin protection
+-------------------------
+
+An Admin cannot deactivate, suspend, delete, or demote a Super Admin.
+These actions are rejected by the backend, even if attempted outside the UI.
+
+Changes to a Super Admin account require:
+
+- An authenticated Super Admin session.
+- The configured Super Admin break-glass PIN.
+
+The PIN is stored as a bcrypt hash in Backend/.env under:
+
+SUPER_ADMIN_BREAK_GLASS_PIN_HASH
+
+Never store or commit the plaintext PIN in source code, documentation, screenshots,
+logs, or client-side storage.
+
+3. Recovering a locked Super Admin account
+-------------------------------------------
+
+1. Open the Login screen.
+2. Enter the Super Admin email and password.
+3. Enter the break-glass PIN in the optional field named:
+   Super Admin recovery PIN
+4. Select Login.
+5. If the credentials and PIN are valid, the backend will restore the account's
+   active status and clear its suspension timestamp.
+6. The account will then receive normal Super Admin access to the control center,
+   users, verification, audit, and analytics pages.
+
+4. If recovery fails
+--------------------
+
+- Confirm that Backend/.env contains SUPER_ADMIN_BREAK_GLASS_PIN_HASH.
+- Restart the backend after changing Backend/.env.
+- Confirm the email and password are correct.
+- Do not send the plaintext PIN in URLs, query strings, or chat messages.
+- Review the backend logs for authentication errors without logging the PIN.
+
+5. Operational rule
+--------------------
+
+Keep at least one active Super Admin account. Do not use the user-management
+screen to suspend or demote the only Super Admin. Use the break-glass recovery
+process only for account recovery or an explicitly authorized protected change.

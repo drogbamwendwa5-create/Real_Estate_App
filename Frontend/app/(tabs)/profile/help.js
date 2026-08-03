@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, Linking, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, Text, Linking, TouchableOpacity, View } from 'react-native';
 import { Button, Surface, Text as PaperText, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../Context/ThemeContext';
@@ -20,7 +20,7 @@ export default function HelpScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
         <PaperText style={[styles.title, { color: theme.colors.text }]}>Help & Support</PaperText>

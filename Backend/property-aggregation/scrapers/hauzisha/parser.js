@@ -1,0 +1,1 @@
+const N=require("../../utils/PropertyNormalizer");class P{parse(d){return N.normalize(d,"hauzisha");}}module.exports=P;

@@ -16,9 +16,11 @@ export default function EditProfileScreen() {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await updateUserDetails(data);
-      dispatch(updateUser(response.data));
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/profile');
+      }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Update failed';
       Alert.alert('Error', message);

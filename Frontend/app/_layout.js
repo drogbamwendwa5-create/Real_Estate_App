@@ -1,6 +1,13 @@
 import React from 'react';
-import { Stack } from 'expo-router';
 import { LogBox } from 'react-native';
+import { Stack } from 'expo-router';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { store, persistor } from '../store';
+import { ThemeProvider, useTheme } from '../Context/ThemeContext';
 
 // Suppress known third-party deprecation warnings from dependencies
 LogBox.ignoreLogs([
@@ -15,7 +22,8 @@ const warnFilter = (...args) => {
   if (
     message.includes('props.pointerEvents is deprecated') ||
     message.includes('"shadow*" style props are deprecated') ||
-    (message.includes('useNativeDriver') && message.includes('not supported'))
+    (message.includes('useNativeDriver') && message.includes('not supported')) ||
+    message.includes('Text strings must be rendered within a <Text> component')
   ) {
     return;
   }
@@ -26,7 +34,8 @@ const errorFilter = (...args) => {
   if (
     message.includes('props.pointerEvents is deprecated') ||
     message.includes('"shadow*" style props are deprecated') ||
-    (message.includes('useNativeDriver') && message.includes('not supported'))
+    (message.includes('useNativeDriver') && message.includes('not supported')) ||
+    message.includes('Text strings must be rendered within a <Text> component')
   ) {
     return;
   }
@@ -34,33 +43,35 @@ const errorFilter = (...args) => {
 };
 console.warn = warnFilter;
 console.error = errorFilter;
-import { Provider } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { PaperProvider } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { store, persistor } from '../store';
-import { ThemeProvider } from '../Context/ThemeContext';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <PaperProvider>
-              <StatusBar style="auto" />
-              <Stack 
-                screenOptions={{ 
-                  headerShown: false,
-                  animation: 'slide_from_right',
-                  animationDuration: 300,
-                }} 
-              />
-            </PaperProvider>
-          </PersistGate>
-        </Provider>
+        <ThemedRoot />
       </ThemeProvider>
     </SafeAreaProvider>
   );
-};
+}
+
+function ThemedRoot() {
+  const { paperTheme, theme } = useTheme();
+
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <PaperProvider theme={paperTheme}>
+          <StatusBar style="auto" />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { paddingTop: 30, backgroundColor: theme.colors.background },
+              animation: 'slide_from_right',
+              animationDuration: 300,
+            }}
+          />
+        </PaperProvider>
+      </PersistGate>
+    </Provider>
+  );
+}

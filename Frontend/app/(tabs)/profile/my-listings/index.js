@@ -1,42 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text, Button, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../Context/ThemeContext';
 import PropertyCard from '../../../../Components/Property/PropertyCard';
 import EmptyState from '../../../../Components/common/EmptyState';
 import Icon from 'react-native-vector-icons/Ionicons';
-
-const MOCK_LISTINGS = [
-  { id: 1, title: 'Luxury Villa with Pool', price: 1250000, location: 'Beverly Hills, CA', bedrooms: 5, bathrooms: 4, area: 4500, image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6', images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6'], status: 'active' },
-  { id: 2, title: 'Modern Apartment Downtown', price: 750000, location: 'Los Angeles, CA', bedrooms: 2, bathrooms: 2, area: 1200, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267', images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], status: 'active' },
-];
+import propertyService from '../../../../Services/api/propertyService';
+import { useSelector } from 'react-redux';
 
 export default function MyListingsScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [listings, setListings] = useState([]);
+  const [error, setError] = useState(null);
+
+  const fetchListings = useCallback(async () => {
+    try {
+      setError(null);
+      const response = await propertyService.getMyProperties();
+      const data = response?.data || response || [];
+      setListings(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      setError(error?.message || 'Failed to load listings');
+      setListings([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        // Simulate API fetch
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setListings(MOCK_LISTINGS);
-      } catch (error) {
-        console.error('Error fetching listings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchListings();
-  }, []);
+  }, [fetchListings]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchListings();
+  }, [fetchListings]);
 
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <EmptyState
+          icon="lock-closed-outline"
+          title="Login Required"
+          description="Please log in to view your listings"
+          buttonText="Login"
+          onButtonPress={() => router.push('/auth/login')}
+        />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Something went wrong"
+          description={error}
+          buttonText="Retry"
+          onButtonPress={fetchListings}
+        />
       </View>
     );
   }
@@ -55,20 +93,25 @@ export default function MyListingsScreen() {
       {listings.length > 0 ? (
         <FlatList
           data={listings}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id?.toString() || item._id?.toString()}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
+          }
+          renderItem={({ item }) => {
+            const propertyId = item.id || item._id;
+            return (
             <View>
               <PropertyCard
                 property={item}
-                onPress={() => router.push(`/property/${item.id}`)}
+                onPress={() => router.push(`/property/${propertyId}`)}
                 onFavorite={() => {}}
               />
               <View style={styles.cardActions}>
                 <TouchableOpacity 
                   style={[styles.actionButton, { borderColor: theme.colors.primary }]}
-                  onPress={() => router.push(`/listing/${item.id}`)}
+                  onPress={() => router.push(`/listing/${propertyId}`)}
                 >
                   <Icon name="pencil" size={16} color={theme.colors.primary} />
                   <Text style={[styles.actionText, { color: theme.colors.primary }]}>Edit</Text>
@@ -82,7 +125,8 @@ export default function MyListingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          )}
+            );
+          }}
           ListFooterComponent={<View style={{ height: 80 }} />}
         />
       ) : (

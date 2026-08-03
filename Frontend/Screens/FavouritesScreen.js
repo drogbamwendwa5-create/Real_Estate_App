@@ -3,10 +3,12 @@ import { View, StyleSheet, FlatList, Text, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PropertyCard from '../Components/cards/PropertyCard';
-import { getFavourites, removeFromFavourites } from '../Services/api';
+import { getAggregatedSaved, removeFromFavourites } from '../Services/api';
 import { useAuth } from '../Hooks/useAuth';
+import { useTheme } from '../Context/ThemeContext';
 
 const FavouritesScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [favourites, setFavourites] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -17,8 +19,9 @@ const FavouritesScreen = ({ navigation }) => {
 
   const fetchFavourites = async () => {
     try {
-      const response = await getFavourites();
-      setFavourites(response.data);
+      const response = await getAggregatedSaved();
+      const list = response.data || response || [];
+      setFavourites(list.map((p) => ({ property: p })));
     } catch (error) {
       console.error('Error fetching favourites:', error);
     } finally {
@@ -38,16 +41,16 @@ const FavouritesScreen = ({ navigation }) => {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyText}>No favourites yet</Text>
-      <Text style={styles.emptySubtext}>Start exploring and save your favourite properties</Text>
+      <Text style={[styles.emptyText, { color: theme.colors.text }]}>No favourites yet</Text>
+      <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Start exploring and save your favourite properties</Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text>Loading...</Text>
+          <Text style={{ color: theme.colors.text }}>Loading...</Text>
         </View>
       ) : (
         <FlatList
@@ -61,6 +64,7 @@ const FavouritesScreen = ({ navigation }) => {
             <PropertyCard
               property={item.property}
               onFavouritePress={() => handleRemoveFavourite(item.property._id)}
+              isFavorite={true}
             />
           )}
         />
@@ -72,7 +76,6 @@ const FavouritesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   loadingContainer: {
     flex: 1,
@@ -96,12 +99,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
   },
 });

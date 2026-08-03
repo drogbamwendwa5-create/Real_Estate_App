@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../Context/ThemeContext';
 import { FilterChip } from '../Search/FilterChip';
@@ -13,26 +14,35 @@ export const HeroSearch = ({ onSearch, onFilterChange, style }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const propertyTypes = ['All', 'House', 'Apartment', 'Villa', 'Condo'];
-  const priceRanges = ['Any', '$0-$200k', '$200k-$500k', '$500k-$1M', '$1M+'];
+  const priceRanges = ['Any', '0-20M', '20M-50M', '50M-100M', '100M+'];
   const bedroomOptions = ['Any', '1+', '2+', '3+', '4+', '5+'];
+
+  const handleApply = () => {
+    const params = {
+      search: location || undefined,
+      propertyType: propertyType !== 'all' ? propertyType.toLowerCase() : undefined,
+      minPrice: priceRange.includes('M') ? priceRange.split('-')[0].replace('M', '000000') : undefined,
+      maxPrice: priceRange.includes('M-') ? priceRange.split('-')[1].replace('M', '000000') : undefined,
+      bedrooms: bedrooms !== 'any' ? bedrooms.replace('+', '') : undefined,
+    };
+    onSearch?.(params);
+    onFilterChange?.(params);
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }, style]}>
-      <View style={[styles.searchBox, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+      <View style={[styles.searchBox, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}> 
         <Icon name="search" size={20} color={theme.colors.primary} style={styles.searchIcon} />
-        <Text 
-          style={[styles.searchInput, { color: theme.colors.text }]}
-          placeholder="Search by location..."
-        >
-          {location || 'Find your dream home...'}
-        </Text>
-        <TouchableOpacity style={styles.filterButton} onPress={() => setShowFilters(!showFilters)}>
-          <Icon 
-            name="options" 
-            size={20} 
-            color={showFilters ? theme.colors.primary : theme.colors.textSecondary} 
-          />
-        </TouchableOpacity>
+        <TextInput
+          mode="flat"
+          placeholder="Search by location, estate, or keyword"
+          value={location}
+          onChangeText={setLocation}
+          style={[styles.searchInput, { backgroundColor: theme.colors.surface, color: theme.colors.text }]}
+          underlineColor="transparent"
+          activeUnderlineColor="transparent"
+          right={<TextInput.Icon icon="filter" color={theme.colors.primary} onPress={() => setShowFilters(!showFilters)} />}
+        />
       </View>
 
       {showFilters && (
@@ -60,9 +70,9 @@ export const HeroSearch = ({ onSearch, onFilterChange, style }) => {
               {priceRanges.map((range) => (
                 <FilterChip
                   key={range}
-                  label={range}
-                  active={priceRange === range.toLowerCase()}
-                  onPress={() => setPriceRange(range.toLowerCase())}
+                  label={`KES ${range}`}
+                  active={priceRange === range}
+                  onPress={() => setPriceRange(range)}
                 />
               ))}
             </ScrollView>
@@ -84,10 +94,7 @@ export const HeroSearch = ({ onSearch, onFilterChange, style }) => {
 
           <TouchableOpacity 
             style={[styles.applyButton, { backgroundColor: theme.colors.primary }]}
-            onPress={() => {
-              onSearch?.({ location, propertyType, priceRange, bedrooms });
-              onFilterChange?.({ location, propertyType, priceRange, bedrooms });
-            }}
+            onPress={handleApply}
           >
             <Text style={styles.applyButtonText}>Apply Filters</Text>
           </TouchableOpacity>
@@ -105,10 +112,15 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 16,
-    height: 50,
+    height: 56,
+    ...Platform.select({
+      ios: { shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 2 },
+      default: {},
+    }),
   },
   searchIcon: {
     marginRight: 12,

@@ -23,7 +23,7 @@ export default function SplashScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2563EB' },
+  container: { flex: 1, paddingTop: 15, justifyContent: 'center', alignItems: 'center', backgroundColor: '#2563EB' },
   logo: { width: 120, height: 120, marginBottom: 20 },
   appName: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
   tagline: { fontSize: 16, color: '#fff' },

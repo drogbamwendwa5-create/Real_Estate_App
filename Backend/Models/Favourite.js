@@ -9,7 +9,12 @@ const FavouriteSchema = new mongoose.Schema({
   property: {
     type: mongoose.Schema.ObjectId,
     ref: 'Property',
-    required: true,
+    default: null,
+  },
+  aggregatedProperty: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'AggregatedProperty',
+    default: null,
   },
   createdAt: {
     type: Date,
@@ -17,6 +22,15 @@ const FavouriteSchema = new mongoose.Schema({
   },
 });
 
-FavouriteSchema.index({ user: 1, property: 1 }, { unique: true });
+FavouriteSchema.index({ user: 1, property: 1 }, { unique: true, sparse: true });
+FavouriteSchema.index({ user: 1, aggregatedProperty: 1 }, { unique: true, sparse: true });
+
+FavouriteSchema.pre('save', function (next) {
+  if (!this.property && !this.aggregatedProperty) {
+    next(new Error('Either property or aggregatedProperty must be provided'));
+  } else {
+    next();
+  }
+});
 
 module.exports = mongoose.model('Favourite', FavouriteSchema);

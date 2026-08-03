@@ -1,309 +1,154 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Divider, Surface, Avatar } from 'react-native-paper';
+import React, { useEffect, useMemo } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../../../Context/ThemeContext';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout as logoutAction } from '../../../store/slices/authSlice';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { logout as logoutAction, updateUser } from '../../../store/slices/authSlice';
+import authService from '../../../Services/api/authService';
+import { useTheme } from '../../../Context/ThemeContext';
+
+const canonicalRole = role => ({ user: 'buyer-tenant', agent: 'agency-professional' }[role] || role || 'guest');
+
+const ROLE_NAMES = {
+  'super-admin': 'Super Admin',
+  admin: 'Admin',
+  'agency-professional': 'Agency / Professional',
+  'property-owner': 'Property Owner',
+  'buyer-tenant': 'Buyer / Tenant',
+  guest: 'Guest',
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { theme } = useTheme();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const user = useSelector(state => state.auth.user);
+  const role = canonicalRole(user?.role || user?.canonicalRole);
+  const roleName = ROLE_NAMES[role] || 'Guest';
 
-  const displayName = user?.name || (isAuthenticated ? 'User' : 'Guest');
-  const displayEmail = user?.email || (isAuthenticated ? 'user@example.com' : '');
-  const avatarUrl = user?.avatar?.url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=2563EB&color=fff`;
+  const sections = useMemo(() => {
+    if (role === 'super-admin') return [
+      { title: 'Governance', items: [
+        ['speedometer-outline', 'Control center', 'Platform operations', '/(tabs)/home'],
+        ['people-outline', 'Users and roles', 'Manage access and promotions', '/(tabs)/admin-users'],
+        ['shield-checkmark-outline', 'Verification queue', 'Approve pending requests', '/(tabs)/admin-review'],
+        ['construct-outline', 'System tools', 'Flags, settings, and backups', '/(tabs)/admin-systems'],
+        ['list-outline', 'Audit activity', 'Review security events', '/(tabs)/admin-audit'],
+      ] },
+      { title: 'Account', items: [
+        ['create-outline', 'Edit profile', 'Update your personal details', '/(tabs)/profile/edit'],
+        ['settings-outline', 'Settings', 'Security and preferences', '/(tabs)/profile/settings'],
+      ] },
+    ];
+    if (role === 'admin') return [
+      { title: 'Moderation', items: [
+        ['checkmark-done-outline', 'Review queue', 'Verification requests', '/(tabs)/admin-review'],
+        ['flag-outline', 'Reports', 'Triage marketplace reports', '/(tabs)/admin-reports'],
+        ['bar-chart-outline', 'Analytics', 'Platform performance', '/admin/control-center?section=analytics'],
+      ] },
+      { title: 'Account', items: [
+        ['create-outline', 'Edit profile', 'Update your personal details', '/(tabs)/profile/edit'],
+        ['settings-outline', 'Settings', 'Security and preferences', '/(tabs)/profile/settings'],
+      ] },
+    ];
+    if (role === 'agency-professional' || role === 'property-owner') return [
+      { title: 'Workspace', items: [
+        ['home-outline', 'My listings', 'Manage your portfolio', '/property/my-listings'],
+        ['document-lock-outline', 'Verification', 'Build trust with buyers', '/verification/ownership'],
+        ['chatbubbles-outline', 'Leads and inquiries', 'Respond to prospects', '/chat/inbox'],
+      ] },
+      { title: 'Account', items: [
+        ['create-outline', 'Edit professional profile', 'Company, bio, and contact details', '/(tabs)/profile/edit'],
+        ['settings-outline', 'Settings', 'Security and preferences', '/(tabs)/profile/settings'],
+      ] },
+    ];
+    return [
+      { title: 'Your activity', items: [
+        ['heart-outline', 'Saved homes', 'View favourites and shortlists', '/property/saved'],
+        ['chatbubbles-outline', 'Messages', 'Talk to owners and agents', '/chat/inbox'],
+        ['notifications-outline', 'Notifications', 'Stay up to date', '/(tabs)/profile/notifications'],
+        ['briefcase-outline', 'Apply as an agent', 'Get approved to publish listings', '/verification/agent-application'],
+      ] },
+      { title: 'Account', items: [
+        ['create-outline', 'Edit profile', 'Update your personal details', '/(tabs)/profile/edit'],
+        ['settings-outline', 'Settings', 'Security and preferences', '/(tabs)/profile/settings'],
+      ] },
+    ];
+  }, [role]);
 
-  const handleLogout = () => {
-    dispatch(logoutAction());
-    router.replace('/auth/login');
+  const logout = () => {
+    Alert.alert('Log out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log out', style: 'destructive', onPress: () => { dispatch(logoutAction()); router.replace('/auth/login'); } },
+    ]);
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Surface style={[styles.profileCard, { backgroundColor: theme.colors.surface }]}>
-          <View style={styles.avatarContainer}>
-            <Avatar.Image size={80} source={{ uri: avatarUrl }} />
-            {isAuthenticated && (
-              <TouchableOpacity style={styles.editAvatarButton}>
-                <Icon name="camera" size={18} color="#FFFFFF" />
-              </TouchableOpacity>
-            )}
+    <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <View style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+          <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
+            <Text style={styles.avatarText}>{(user?.name || 'G').slice(0, 1).toUpperCase()}</Text>
           </View>
-          <Text style={[styles.name, { color: theme.colors.text }]}>
-            {displayName}
-          </Text>
-          <Text style={[styles.email, { color: theme.colors.textSecondary }]}>
-            {displayEmail}
-          </Text>
-          {isAuthenticated && (
-            <TouchableOpacity 
-              style={[styles.editButton, { borderColor: theme.colors.primary }]}
-              onPress={() => router.push('./edit')}
-            >
-              <Icon name="pencil" size={16} color={theme.colors.primary} />
-              <Text style={[styles.editButtonText, { color: theme.colors.primary }]}>
-                Edit Profile
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Surface>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Account
-        </Text>
-        <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('./my-listings')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-              <Icon name="home" size={22} color={theme.colors.primary} />
+          <View style={styles.profileCopy}>
+            <Text style={[styles.name, { color: theme.colors.text }]} selectable>{user?.name || 'Guest'}</Text>
+            <Text style={[styles.email, { color: theme.colors.textSecondary }]} selectable>{user?.email || 'Browse without an account'}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: theme.colors.primary + '18' }]}>
+              <Ionicons name={role === 'super-admin' ? 'shield-checkmark' : 'person-circle-outline'} size={14} color={theme.colors.primary} />
+              <Text style={[styles.roleText, { color: theme.colors.primary }]}>{roleName}</Text>
             </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                My Listings
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                Manage your properties
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+          </View>
+          <Pressable onPress={() => router.push('/(tabs)/profile/edit')} style={styles.editButton}><Ionicons name="create-outline" size={20} color={theme.colors.primary} /></Pressable>
+        </View>
 
-          <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('../saved')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.error + '20' }]}>
-              <Icon name="heart" size={22} color={theme.colors.error} />
+        {sections.map(section => (
+          <View key={section.title} style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>{section.title}</Text>
+            <View style={[styles.menuCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
+              {section.items.map(([icon, title, description, route], index) => (
+                <React.Fragment key={title}>
+                  {index > 0 ? <View style={[styles.divider, { backgroundColor: theme.colors.border }]} /> : null}
+                  <Pressable onPress={() => router.push(route)} style={({ pressed }) => [styles.menuItem, { opacity: pressed ? 0.65 : 1 }]}>
+                    <View style={[styles.iconBox, { backgroundColor: theme.colors.primary + '16' }]}><Ionicons name={icon} size={20} color={theme.colors.primary} /></View>
+                    <View style={styles.menuCopy}><Text style={[styles.menuTitle, { color: theme.colors.text }]}>{title}</Text><Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>{description}</Text></View>
+                    <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
+                  </Pressable>
+                </React.Fragment>
+              ))}
             </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                Saved Properties
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                View your favourites
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
+          </View>
+        ))}
 
-          <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('./settings')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.info + '20' }]}>
-              <Icon name="settings" size={22} color={theme.colors.info} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                Settings
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                App preferences
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-        </Surface>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Support
-        </Text>
-        <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('./notifications')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.warning + '20' }]}>
-              <Icon name="notifications" size={22} color={theme.colors.warning} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                Notifications
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                Manage notifications
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-
-          <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('./help')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.success + '20' }]}>
-              <Icon name="help-circle" size={22} color={theme.colors.success} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                Help & Support
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                FAQ and contact
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-
-          <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
-
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('./about')}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '20' }]}>
-              <Icon name="information-circle" size={22} color={theme.colors.primary} />
-            </View>
-            <View style={styles.menuContent}>
-              <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
-                About
-              </Text>
-              <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
-                App information
-              </Text>
-            </View>
-            <Icon name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-        </Surface>
-      </View>
-
-      <TouchableOpacity 
-        style={[styles.deleteAccountButton, { borderColor: theme.colors.error }]}
-        onPress={handleLogout}
-      >
-        <Icon name="log-out" size={20} color={theme.colors.error} />
-        <Text style={[styles.deleteAccountText, { color: theme.colors.error }]}>
-          Logout
-        </Text>
-      </TouchableOpacity>
-
-      <View style={{ height: theme.spacing.lg }} />
-    </ScrollView>
+        <Pressable onPress={logout} style={[styles.logout, { borderColor: theme.colors.error }]}>
+          <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
+          <Text style={[styles.logoutText, { color: theme.colors.error }]}>Log out</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  profileCard: {
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 16,
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  card: {
-    marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  menuDescription: {
-    fontSize: 13,
-  },
-  divider: {
-    marginHorizontal: 16,
-  },
-  deleteAccountButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginTop: 8,
-  },
-  deleteAccountText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  screen: { flex: 1 },
+  content: { padding: 18, paddingBottom: 100, gap: 18 },
+  profileCard: { borderRadius: 22, borderWidth: 1, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 13 },
+  avatar: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#fff', fontSize: 25, fontWeight: '900' },
+  profileCopy: { flex: 1, gap: 3 },
+  name: { fontSize: 21, fontWeight: '900' },
+  email: { fontSize: 12 },
+  roleBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 14, paddingHorizontal: 9, paddingVertical: 5, marginTop: 4 },
+  roleText: { fontSize: 11, fontWeight: '800' },
+  editButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  section: { gap: 7 },
+  sectionTitle: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: '800', marginLeft: 4 },
+  menuCard: { borderRadius: 18, borderWidth: 1, overflow: 'hidden' },
+  menuItem: { minHeight: 70, flexDirection: 'row', alignItems: 'center', padding: 13, gap: 11 },
+  iconBox: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  menuCopy: { flex: 1, gap: 3 },
+  menuTitle: { fontSize: 15, fontWeight: '800' },
+  menuDescription: { fontSize: 12, lineHeight: 17 },
+  divider: { height: 1, marginLeft: 62 },
+  logout: { minHeight: 50, borderRadius: 14, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  logoutText: { fontSize: 14, fontWeight: '800' },
 });

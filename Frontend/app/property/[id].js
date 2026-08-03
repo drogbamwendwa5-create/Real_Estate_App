@@ -2,65 +2,104 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Image, Text, ActivityIndicator } from 'react-native';
 import { Surface, Title, Paragraph, Button, Divider } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { useTheme } from '../../Context/ThemeContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import PropertyGallery from '../../Components/Property/PropertyGallery';
 import QuickStats from '../../Components/Property/QuickStats';
 import Amenities from '../../Components/Property/Amenities';
 import AgentCard from '../../Components/Property/AgentCard';
+import PropertyMapView from '../../Components/Property/MapView';
+import { formatPrice, formatLocation } from '../../Utils/helpers';
+import { toggleFavourite as toggleFavouriteAction } from '../../store/slices/favouriteSlice';
+import PropertyService from '../../Services/api/propertyService';
+
+const FALLBACK_PROPERTY_DETAILS = {
+  '1': {
+    id: '1', title: 'Luxury Villa - Runda', price: 85000000, location: 'Runda, Nairobi', street: '123 Runda Drive', city: 'Nairobi', propertyType: 'Villa', bedrooms: 5, bathrooms: 4, area: 450,
+    description: 'Stunning luxury villa in Runda with panoramic views, a private pool, and world-class amenities. This architectural masterpiece features high ceilings, marble floors, and smart-home technology.',
+    images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6', 'https://images.unsplash.com/photo-1600596542815-27bfef402323'], amenities: ['WiFi', 'Pool', 'Gym', 'Security', 'Parking', 'AC', 'Generator', 'Water Tank'],
+  },
+  '2': {
+    id: '2', title: 'Modern Apartment - Westlands', price: 18000000, location: 'Westlands, Nairobi', city: 'Nairobi', propertyType: 'Apartment', bedrooms: 2, bathrooms: 2, area: 120,
+    description: 'A bright, modern apartment in the heart of Westlands, close to restaurants, shopping, and Nairobi business districts. Designed for easy city living with generous natural light.',
+    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], amenities: ['Security', 'Parking', 'Elevator', 'Backup Power', 'Gym'],
+  },
+  '3': {
+    id: '3', title: 'Cozy Family Home - Lavington', price: 35000000, location: 'Lavington, Nairobi', city: 'Nairobi', propertyType: 'Family Home', bedrooms: 3, bathrooms: 3, area: 220,
+    description: 'A welcoming family home in leafy Lavington with comfortable living spaces, a private garden, and quick access to schools, parks, and local amenities.',
+    images: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994'], amenities: ['Garden', 'Security', 'Parking', 'Water Tank', 'Staff Quarters'],
+  },
+};
+
+const normalizeProperty = (rawProperty, requestedId) => {
+  if (!rawProperty) return null;
+  const rawImages = rawProperty.images || rawProperty.propertyImages || [];
+  const images = rawImages
+    .map((image) => (typeof image === 'string' ? image : image?.url))
+    .filter(Boolean);
+  const location = typeof rawProperty.location === 'string'
+    ? rawProperty.location
+    : [rawProperty.estate, rawProperty.town, rawProperty.county].filter(Boolean).join(', ') || 'Location not specified';
+
+  return {
+    ...rawProperty,
+    id: rawProperty._id || rawProperty.id || requestedId,
+    images,
+    location,
+    area: rawProperty.area ?? rawProperty.size,
+    agent: rawProperty.agent || (rawProperty.agentName ? {
+      name: rawProperty.agentName,
+      title: rawProperty.agencyName || 'Real Estate Agent',
+      phone: rawProperty.agentPhone,
+    } : undefined),
+  };
+};
 
 export default function PropertyDetailScreen() {
   const router = useRouter();
   const { theme } = useTheme();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
   const [property, setProperty] = useState(null);
-  const [isFavourite, setIsFavourite] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const favouriteIds = useSelector((state) => {
+    const items = state.favourite?.favourites || [];
+    return items.map((item) => item?._id || item?.id || item?.property?._id || item?.property?.id);
+  }, shallowEqual);
+  const isFavourite = favouriteIds.includes(property?._id || property?.id);
 
   useEffect(() => {
+    let active = true;
     const fetchProperty = async () => {
       try {
-        // Simulate API fetch
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setProperty({
-          id: params.id,
-          title: 'Luxury Villa with Pool',
-          price: 1250000,
-          location: 'Beverly Hills, CA',
-          street: '123 Luxury Lane',
-          city: 'Beverly Hills',
-          propertyType: 'Villa',
-          bedrooms: 5,
-          bathrooms: 4,
-          area: 4500,
-          description: 'Stunning luxury villa with panoramic views, private pool, and world-class amenities. This architectural masterpiece features high ceilings, marble floors, and state-of-the-art smart home technology.',
-          images: [
-            'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
-            'https://images.unsplash.com/photo-1600596542815-27bfef402323',
-          ],
-          amenities: ['WiFi', 'Pool', 'Gym', 'Security', 'Parking', 'AC'],
-          agent: {
-            name: 'Sarah Johnson',
-            title: 'Senior Real Estate Agent',
-            rating: 4.9,
-            reviewCount: 127,
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=100&h=100&fit=crop',
-            phone: '+1 234 567 890',
-          },
-        });
+        const propertyId = Array.isArray(params.id) ? params.id[0] : params.id;
+        if (!propertyId) return;
+
+        const response = await PropertyService.getAggregatedProperty(propertyId);
+        const loadedProperty = response?.data || response?.property || response;
+        if (active && loadedProperty) setProperty(normalizeProperty(loadedProperty, propertyId));
       } catch (error) {
-        console.error('Error fetching property:', error);
+        // Sample listings use numeric IDs; keep them usable when the API is offline.
+        const propertyId = Array.isArray(params.id) ? params.id[0] : params.id;
+        if (active) setProperty(normalizeProperty(FALLBACK_PROPERTY_DETAILS[propertyId], propertyId));
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
-    if (params.id) fetchProperty();
+    fetchProperty();
+    return () => { active = false; };
   }, [params.id]);
 
   const toggleFavourite = () => {
-    setIsFavourite(!isFavourite);
+    if (property) {
+      dispatch(toggleFavouriteAction(property));
+    }
   };
 
   if (loading) {
@@ -75,13 +114,14 @@ export default function PropertyDetailScreen() {
     return (
       <View style={styles.center}>
         <Title style={styles.errorText}>Property not found</Title>
-        <Button mode="contained" onPress={() => router.back()}>Go Back</Button>
+        <Button mode="contained" onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}>Go Back</Button>
       </View>
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar style="light" translucent />
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.imageSection}>
           {showGallery ? (
@@ -98,8 +138,8 @@ export default function PropertyDetailScreen() {
               ))}
             </ScrollView>
           )}
-          <View style={styles.imageOverlay}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <View style={[styles.imageOverlay, { paddingTop: insets.top + 12 }]}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} hitSlop={12} activeOpacity={0.8}>
               <Icon name="arrow-back" size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.favButton} onPress={toggleFavourite}>
@@ -111,7 +151,7 @@ export default function PropertyDetailScreen() {
             </TouchableOpacity>
           </View>
           {property.images?.length > 1 && (
-            <View style={[styles.imageCount, { backgroundColor: theme.colors.primary }]}>
+            <View style={[styles.imageCount, { backgroundColor: theme.colors.primary, top: insets.top + 16 }]}>
               <Text style={styles.imageCountText}>
                 {property.images.length} Photos
               </Text>
@@ -126,10 +166,10 @@ export default function PropertyDetailScreen() {
                 {property.title}
               </Title>
               <Paragraph style={[styles.price, { color: theme.colors.primary }]}>
-                ${property.price?.toLocaleString()}
+                {formatPrice(property.price)}
               </Paragraph>
               <Paragraph style={[styles.location, { color: theme.colors.textSecondary }]}>
-                📍 {property.location}
+                📍 {formatLocation(property.location, property.address)}
               </Paragraph>
             </View>
             {property.images?.length > 1 && (
@@ -167,6 +207,15 @@ export default function PropertyDetailScreen() {
             Amenities
           </Title>
           <Amenities amenities={property.amenities} />
+
+          <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
+
+          <PropertyMapView 
+            location={property.location || `${property.street || ''}, ${property.city || ''}`}
+            title={property.title}
+            coordinates={property.location?.coordinates || property.coordinates || [-1.2921, 36.8219]}
+            propertyId={property._id || property.id}
+          />
 
           <Divider style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
@@ -222,6 +271,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    zIndex: 20,
+    elevation: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 16,

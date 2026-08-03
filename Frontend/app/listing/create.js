@@ -33,9 +33,11 @@ export default function CreateListingScreen() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // TODO: Wire to backend
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/home');
+    }
   };
 
   return (
@@ -59,7 +61,7 @@ export default function CreateListingScreen() {
               mode="outlined"
               value={title}
               onChangeText={setTitle}
-              placeholder="e.g., Luxury Villa with Pool"
+              placeholder="e.g., Luxury Villa - Runda"
               style={[styles.input, { backgroundColor: theme.colors.surface }]}
               outlineColor={theme.colors.border}
               activeOutlineColor={theme.colors.primary}
@@ -69,13 +71,13 @@ export default function CreateListingScreen() {
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 12 }]}>
               <Paragraph style={[styles.label, { color: theme.colors.textSecondary }]}>
-                Price ($)
+                Price (KSh)
               </Paragraph>
               <TextInput
                 mode="outlined"
                 value={price}
                 onChangeText={setPrice}
-                placeholder="1250000"
+                placeholder="25000000"
                 keyboardType="numeric"
                 style={[styles.input, { backgroundColor: theme.colors.surface }]}
                 outlineColor={theme.colors.border}
@@ -90,7 +92,7 @@ export default function CreateListingScreen() {
                 mode="outlined"
                 value={location}
                 onChangeText={setLocation}
-                placeholder="City, State"
+                placeholder="e.g., Westlands, Nairobi"
                 style={[styles.input, { backgroundColor: theme.colors.surface }]}
                 outlineColor={theme.colors.border}
                 activeOutlineColor={theme.colors.primary}
@@ -152,7 +154,7 @@ export default function CreateListingScreen() {
             </View>
             <View style={[styles.inputGroup, { flex: 1 }]}>
               <Paragraph style={[styles.label, { color: theme.colors.textSecondary }]}>
-                Area (m²)
+                Area (m2)
               </Paragraph>
               <TextInput
                 mode="outlined"

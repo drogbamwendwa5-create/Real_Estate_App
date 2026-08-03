@@ -30,7 +30,7 @@ export default function OTPVerificationScreen() {
         <Text style={styles.title}>Verify OTP</Text>
         <Text style={styles.subtitle}>Enter the 6-digit code sent to your email</Text>
         <HelperText type="error">{error}</HelperText>
-        <Button mode="contained" style={styles.button} onPress={() => router.back()}>
+        <Button mode="contained" style={styles.button} onPress={() => router.canGoBack() ? router.back() : router.replace('/auth/login')}>
           Go Back
         </Button>
       </ScrollView>

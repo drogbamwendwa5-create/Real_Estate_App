@@ -58,6 +58,6 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: { flex: 1, paddingTop: 15, backgroundColor: '#F8FAFC' },
   logout: { margin: 16 },
 });

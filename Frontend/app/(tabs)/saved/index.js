@@ -1,41 +1,46 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, FAB } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../../Context/ThemeContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import PropertyCard from '../../../Components/Property/PropertyCard';
 import EmptyState from '../../../Components/common/EmptyState';
-import SectionHeader from '../../../Components/Home/SectionHeader';
-
-const SAVED_PROPERTIES = [
-  { id: 1, title: 'Luxury Villa with Pool', price: 1250000, location: 'Beverly Hills, CA', bedrooms: 5, bathrooms: 4, area: 4500, image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6', images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6'] },
-  { id: 2, title: 'Modern Apartment Downtown', price: 750000, location: 'Los Angeles, CA', bedrooms: 2, bathrooms: 2, area: 1200, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267', images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'] },
-];
+import { toggleFavourite as toggleFavouriteAction } from '../../../store/slices/favouriteSlice';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function SavedScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { theme } = useTheme();
+  const savedProperties = useSelector((state) => state.favourite?.favourites || []);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Saved</Text>
-        <TouchableOpacity onPress={() => router.push('/saved/collections')}>
-          <Text style={[styles.collectionsLink, { color: theme.colors.primary }]}>View Collections</Text>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Icon name="chevron-back" size={22} color={theme.colors.text} />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Saved</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
-      {SAVED_PROPERTIES.length > 0 ? (
+      {savedProperties.length > 0 ? (
         <FlatList
-          data={SAVED_PROPERTIES}
-          keyExtractor={(item) => item.id.toString()}
+          data={savedProperties}
+          keyExtractor={(item) => (item?._id || item?.id || Math.random().toString()).toString()}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <PropertyCard
               property={item}
-              onPress={() => router.push(`/property/${item.id}`)}
-              onFavorite={() => {}}
+              onPress={() => router.push(`/property/${item?._id || item?.id}`)}
+              onFavorite={() => dispatch(toggleFavouriteAction(item))}
             />
           )}
           ListFooterComponent={<View style={{ height: 24 }} />}
@@ -49,7 +54,7 @@ export default function SavedScreen() {
           onButtonPress={() => router.push('/')}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -62,12 +67,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 12,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: '700',
+  },
+  headerSpacer: {
+    width: 36,
+    height: 36,
   },
   collectionsLink: {
     fontSize: 14,
