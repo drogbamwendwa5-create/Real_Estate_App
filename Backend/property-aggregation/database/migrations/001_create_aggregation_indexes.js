@@ -4,6 +4,7 @@
  * This is idempotent and safe to run multiple times.
  */
 
+
 const mongoose = require('mongoose');
 
 // Import all aggregation models to trigger index creation
