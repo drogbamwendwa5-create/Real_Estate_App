@@ -30,7 +30,7 @@ const getApiUrl = () => {
     return DEV_API_URL;
   }
 
-  return 'http://localhost:5000/api';
+  return 'https://real-estate-app-jvgi.onrender.com/api';
 };
 
 export const config = {

@@ -14,7 +14,8 @@ export default function ChatScreen() {
     const fetchMessages = async () => {
       try {
         if (!id) return;
-        const response = await fetch(`http://localhost:5000/api/messages/${id}`);
+        // const response = await fetch(`http://localhost:5000/api/messages/${id}`);
+        const response = await fetch(`https://real-estate-app-jvgi.onrender.com/api/messages/${id}`);
         const data = await response.json();
         setMessages(data.data || []);
       } catch (error) {

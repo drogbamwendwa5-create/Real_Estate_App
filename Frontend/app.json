@@ -9,8 +9,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "extra": {
-      "apiUrl": "http://192.168.0.29:5000/api",
-      "EXPO_APP_API_URL": "http://192.168.0.29:5000/api"
+      "apiUrl": "https://real-estate-app-jvgi.onrender.com/api",
+      "EXPO_APP_API_URL": "https://real-estate-app-jvgi.onrender.com/api"
     },
     "ios": {
       "supportsTablet": true,

@@ -9,7 +9,8 @@ export default function NotificationsScreen() {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/notifications');
+        // const response = await fetch('http://localhost:5000/api/notifications');
+        const response = await fetch('https://real-estate-app-jvgi.onrender.com/api/notifications');
         const data = await response.json();
         setNotifications(data.data || []);
       } catch (error) {

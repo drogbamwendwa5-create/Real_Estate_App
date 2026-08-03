@@ -16,7 +16,8 @@ export default function SavedPropertiesScreen() {
   useEffect(() => {
     const fetchFavourites = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/favourites');
+        // const response = await fetch('http://localhost:5000/api/favourites');
+        const response = await fetch('https://real-estate-app-jvgi.onrender.com/api/favourites');
         const data = await response.json();
         setFavourites(data.data || []);
       } catch (error) {
