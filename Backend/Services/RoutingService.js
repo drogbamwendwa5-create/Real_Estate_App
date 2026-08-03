@@ -1,7 +1,7 @@
 const axios = require('axios');
 const geolib = require('geolib');
 const RoutingConfig = require('../Config/RoutingConfig');
-const ErrorResponse = require('../Utils/ErrorResponse');
+const ErrorResponse = require('../Utils/errorResponse');
 
 class RoutingService {
   /**

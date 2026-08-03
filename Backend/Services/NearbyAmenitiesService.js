@@ -2,7 +2,7 @@ const axios = require('axios');
 const NodeCache = require('node-cache');
 const geolib = require('geolib');
 const AmenitiesConfig = require('../Config/AmenitiesConfig');
-const ErrorResponse = require('../Utils/ErrorResponse');
+const ErrorResponse = require('../Utils/errorResponse');
 
 // Cache with 1 hour TTL
 const amenitiesCache = new NodeCache({ stdTTL: 3600 });

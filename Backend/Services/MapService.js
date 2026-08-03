@@ -1,5 +1,5 @@
 const MapConfig = require('../Config/MapConfig');
-const ErrorResponse = require('../Utils/ErrorResponse');
+const ErrorResponse = require('../Utils/errorResponse');
 
 class MapService {
   /**

@@ -1,4 +1,4 @@
-const ErrorResponse = require('../Utils/ErrorResponse');
+const ErrorResponse = require('../Utils/errorResponse');
 const MapService = require('../Services/MapService');
 const GeocodeService = require('../Services/GeocodeService');
 const ReverseGeocodeService = require('../Services/ReverseGeocodeService');

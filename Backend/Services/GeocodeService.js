@@ -1,7 +1,7 @@
 const axios = require('axios');
 const NodeCache = require('node-cache');
 const LocationConfig = require('../Config/LocationConfig');
-const ErrorResponse = require('../Utils/ErrorResponse');
+const ErrorResponse = require('../Utils/errorResponse');
 
 // Simple queue-based concurrency limiter for CommonJS
 const createLimit = (concurrency = 1) => {
