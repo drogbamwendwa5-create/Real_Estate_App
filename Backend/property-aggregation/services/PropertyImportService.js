@@ -15,29 +15,42 @@ class PropertyImportService {
   }
 
   /**
-   * Ensure a property has at least one valid image.
-   * If no images are found, attempt to add a placeholder.
+   * Ensure a property has at least one valid image, unless explicitly opted out.
+   * - If `property.hasImages === false`, we record `propertyImages: []` and skip
+   *   the placeholder so the UI can show a "no images" state honestly.
+   * - Otherwise we fall back to a placeholder only as a last resort.
    */
   ensureImages(property) {
-    const hasPropertyImages = property.propertyImages && 
-      Array.isArray(property.propertyImages) && 
+    const explicitNoImages = property.hasImages === false;
+
+    const hasPropertyImages = property.propertyImages &&
+      Array.isArray(property.propertyImages) &&
       property.propertyImages.length > 0 &&
       property.propertyImages.some(img => img && img.url);
-    
-    const hasImages = property.images && 
-      Array.isArray(property.images) && 
+
+    const hasImages = property.images &&
+      Array.isArray(property.images) &&
       property.images.length > 0 &&
       property.images.some(img => {
         if (typeof img === 'string') return img;
         return img && (img.url || img.src);
       });
 
+    if (explicitNoImages) {
+      property.propertyImages = property.propertyImages || [];
+      property.images = property.images || [];
+      return property;
+    }
+
     if (!hasPropertyImages && !hasImages) {
       const placeholder = 'https://via.placeholder.com/600x400?text=No+Image+Available';
       property.propertyImages = [{ url: placeholder, isFeatured: true, isValid: true }];
       property.images = [placeholder];
+      property.hasImages = false;
+    } else {
+      property.hasImages = true;
     }
-    
+
     return property;
   }
 
@@ -110,7 +123,7 @@ class PropertyImportService {
         await AggregatedProperty.findOneAndUpdate(
           { propertyID: property.propertyID },
           { ...property },
-          { new: true, runValidators: true }
+          { returnDocument: 'after', runValidators: true }
         );
         return { success: true, isUpdate: true };
       }

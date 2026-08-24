@@ -69,12 +69,12 @@ const sourceConfig = {
       usePuppeteer: true,
       category: "listing"
     },
-    pigianme: {
+    pigiame: {
       name: "PigiaMe",
-      baseUrl: "https://www.pigianme.co.ke",
+      baseUrl: "https://www.pigiame.co.ke",
       enabled: true,
       rateLimitMs: 3000,
-      scraperPath: "../scrapers/pigianme/scraper",
+      scraperPath: "../scrapers/pigiame/scraper",
       headers: {},
       usePuppeteer: true,
       category: "listing"

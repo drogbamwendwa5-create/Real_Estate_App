@@ -1,4 +1,4 @@
-class V {
+class JijiValidator {
   validate(d) {
     const e = [];
     if (!d.title || String(d.title).trim().length < 5) e.push("Missing title");
@@ -12,4 +12,4 @@ class V {
   }
 }
 
-module.exports = V;
+module.exports = JijiValidator;

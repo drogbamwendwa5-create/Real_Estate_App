@@ -13,13 +13,11 @@ class BuyRentScraper extends BaseScraper {
   }
 
   async scrapeListingPage(p) {
-    const u = p === 1 ? this.config.baseUrl : this.config.baseUrl + '?page=' + p;
-    console.log(`[BuyRentScraper] Fetching page ${p}: ${u}`);
+    const u = p === 1 ? this.config.baseUrl : this.config.baseUrl + "?page=" + p;
     const h = await this.fetchHTML(u);
     const $ = this.loadCheerio(h);
     const urls = [];
 
-    // Look for property listing links on the page
     $(".property-card a, .listing-card a, a[href*='/listings/']").each((_, e) => {
       const h2 = $(e).attr("href");
       if (h2 && h2.includes("/listings/") && !urls.includes(h2) && !h2.includes("crm/account/listings/create")) {
@@ -27,22 +25,17 @@ class BuyRentScraper extends BaseScraper {
       }
     });
 
-    // If no property cards found, try alternative selectors
     if (urls.length === 0) {
-      console.log('[BuyRentScraper] No property cards found, trying alternative selectors...');
       const allLinks = [];
-      $('a[href]').each((_, e) => {
+      $("a[href]").each((_, e) => {
         const href = $(e).attr("href");
         if (href && href.includes("/listings/") && href.length > 30 && href.length < 200 && !href.includes("crm/account/listings/create")) {
           const cleanHref = href.startsWith("http") ? href : this.config.baseUrl + href;
-          if (!allLinks.includes(cleanHref)) {
-            allLinks.push(cleanHref);
-          }
+          if (!allLinks.includes(cleanHref)) allLinks.push(cleanHref);
         }
       });
-      allLinks.forEach(link => urls.push(link));
+      allLinks.forEach((link) => urls.push(link));
     }
-
     return urls;
   }
 
@@ -53,6 +46,11 @@ class BuyRentScraper extends BaseScraper {
     const property = this.p.parse(raw);
     const v = this.v.validate(property);
     if (v.isValid) return v.data;
+    const onlyImageMissing = v.errors.length === 1 && v.errors[0] === "Missing images";
+    if (onlyImageMissing) {
+      property.hasImages = false;
+      return property;
+    }
     return null;
   }
 }

@@ -6,6 +6,26 @@ const BrowserPool = require("./BrowserPool");
 const ProxyManager = require("./ProxyManager");
 const imageQueue = require("../queues/imageQueue");
 const listingQueue = require("../queues/listingQueue");
+const { createSourceSemaphore } = require("../utils/concurrency");
+const { getBreakerRegistry } = require("../scrapers/base/breakerRegistry");
+
+// Map sourceKey -> canonical sourceName (fixes legacy typos like pigianme).
+const SOURCE_NAME_ALIASES = {
+  jiji: "jiji",
+  pigiame: "pigiame",
+  pigianme: "pigiame",
+  airbnb: "airbnb",
+  booking: "booking",
+  vrbo: "vrbo",
+  buyrent: "buyrent",
+  property24: "property24",
+  kenyapropertycentre: "kenyapropertycentre",
+  hauzisha: "hauzisha",
+};
+
+function resolveSourceName(key) {
+  return SOURCE_NAME_ALIASES[key] || key;
+}
 
 class PropertyAggregatorService {
   constructor() {
@@ -16,6 +36,20 @@ class PropertyAggregatorService {
     this.unavailableScrapers = [];
     this.enableQueueProcessing = process.env.QUEUE_ENABLED === 'true';
     this.enableParallelScraping = process.env.PARALLEL_SCRAPING_ENABLED !== 'false';
+    // Bound parallel scrapers: keep total small to avoid DDoS-ing ourselves.
+    const globalConcurrency = Math.max(
+      1,
+      parseInt(process.env.SCRAPER_GLOBAL_CONCURRENCY || '4', 10) || 4
+    );
+    const perKeyConcurrency = Math.max(
+      1,
+      parseInt(process.env.SCRAPER_PER_KEY_CONCURRENCY || '1', 10) || 1
+    );
+    this.semaphore = createSourceSemaphore({
+      global: globalConcurrency,
+      perKey: perKeyConcurrency,
+    });
+    this.breakers = getBreakerRegistry();
     
     for (const [key, cfg] of Object.entries(sc.sources)) {
       if (cfg.enabled) {
@@ -36,35 +70,35 @@ class PropertyAggregatorService {
   }
 
   /**
-   * Aggregate all sources in parallel using Promise.allSettled.
+   * Aggregate all sources with a global + per-source concurrency limit.
    * Each scraper runs until its source is exhausted. Results are saved to database.
    */
   async aggregateAllSources() {
     console.log("[Aggregator] Starting parallel aggregation of all sources...");
-    
+
     const startTime = Date.now();
     const scraperEntries = Object.entries(this.scraperInstances);
-    const targetListings = Math.max(0, parseInt(process.env.SCRAPER_TARGET_LISTINGS || "500000",10) || 0);
+    const targetListings = Math.max(0, parseInt(process.env.SCRAPER_TARGET_LISTINGS || "500000", 10) || 0);
     const perSourceTarget = targetListings > 0 && scraperEntries.length > 0 ? Math.ceil(targetListings / scraperEntries.length) : Infinity;
-    
+
     if (scraperEntries.length === 0) {
       console.warn("[Aggregator] No scrapers configured");
       return {};
     }
 
-    // Run all scrapers in parallel with Promise.allSettled
-    const scrapePromises = scraperEntries.map(([key, scraper]) => {
-      return this._scrapeSingleSource(key, scraper, perSourceTarget);
-    });
+    // Run all scrapers through the semaphore (global + per-source caps).
+    const scrapePromises = scraperEntries.map(([key, scraper]) =>
+      this.semaphore.run(key, () => this._scrapeSingleSource(key, scraper, perSourceTarget))
+    );
 
     const settledResults = await Promise.allSettled(scrapePromises);
-    
+
     // Process results
     const results = {};
     for (let i = 0; i < settledResults.length; i++) {
       const [key] = scraperEntries[i];
       const settled = settledResults[i];
-      
+
       if (settled.status === 'fulfilled') {
         results[key] = settled.value;
       } else {
@@ -75,7 +109,8 @@ class PropertyAggregatorService {
 
     const totalDuration = Date.now() - startTime;
     console.log(`[Aggregator] Parallel aggregation completed in ${totalDuration}ms`);
-    
+    console.log(`[Aggregator] Breaker snapshot:`, this.breakers.snapshot());
+
     // Clean up browser pool
     try {
       await BrowserPool.closeBrowser();
@@ -111,12 +146,13 @@ class PropertyAggregatorService {
       await this.loggers[key].logScrapeRun({
         ...scrapeResult,
         ...importResult,
-        sourceName: sc.sources[key]?.name || key,
+        sourceName: resolveSourceName(key),
+        usedPuppeteer: !!sc.sources[key]?.usePuppeteer,
       });
       
       const result = {
         source: key,
-        sourceName: sc.sources[key]?.name || key,
+        sourceName: resolveSourceName(key),
         status: scrapeResult.status,
         listingsFound: scrapeResult.listingsFound,
         listingsImported: importResult.imported,

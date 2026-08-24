@@ -23,6 +23,11 @@ const { maintenanceMode, attachFeatureFlags } = require('./Middleware/featureFla
 // Initialize Express app
 const app = express();
 
+// Parse nested query-string objects (e.g. price[gte]=100000 -> { price: { gte: ... } }).
+// Express 5 defaults to the "simple" parser which flattens bracket notation and
+// breaks the APIFeatures range filters used across controllers.
+app.set('query parser', 'extended');
+
 // Route imports
 const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/userRoutes');

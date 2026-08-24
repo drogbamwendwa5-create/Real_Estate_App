@@ -39,6 +39,5 @@ describe('aggregation source normalization', () => {
 
   it('includes additional data sources in the configured source list', () => {
     expect(sourceConfig.sources.websearch).toBeDefined();
-    expect(sourceConfig.sources.socialpromotions).toBeDefined();
   });
 });

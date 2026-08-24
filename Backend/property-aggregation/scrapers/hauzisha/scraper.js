@@ -1,1 +1,44 @@
-const BaseScraper=require("../base/BaseScraper");const P=require("./parser");const E=require("./extractor");const V=require("./validator");const sc=require("../../config/source.config");class S extends BaseScraper{constructor(){super("hauzisha",sc.sources.hauzisha);this.p=new P();this.e=new E();this.v=new V();}async scrapeListingPage(p){const u=this.config.baseUrl+"/properties?page="+p;const h=await this.fetchHTML(u);const $=this.loadCheerio(h);const urls=[];$(".property-card a, .listing-card a, a[href*="/property/"]").each((_,e)=>{const h2=$(e).attr("href");if(h2&&h2.includes("/property/")&&!urls.includes(h2)){urls.push(h2.startsWith("http")?h2:this.config.baseUrl+h2);}});return urls;}async scrapePropertyDetail(u){const h=await this.fetchHTML(u);const $=this.loadCheerio(h);const d=this.e.extract($,u,this.config.baseUrl);const v=this.v.validate(d);if(v.isValid)return v.data;this.logger.logWarning("Validation failed",{url:u,errors:v.errors});return null;}}module.exports=S;
+const BaseScraper = require("../base/BaseScraper");
+const P = require("./parser");
+const E = require("./extractor");
+const V = require("./validator");
+const sc = require("../../config/source.config");
+
+class HauzishaScraper extends BaseScraper {
+  constructor() {
+    super("hauzisha", sc.sources.hauzisha);
+    this.p = new P();
+    this.e = new E();
+    this.v = new V();
+  }
+
+  async scrapeListingPage(p) {
+    const u = this.config.baseUrl + "/properties?page=" + p;
+    const h = await this.fetchHTML(u);
+    const $ = this.loadCheerio(h);
+    const urls = [];
+    $(".property-card a, .listing-card a, a[href*='/property/']").each((_, e) => {
+      const h2 = $(e).attr("href");
+      if (h2 && h2.includes("/property/") && !urls.includes(h2)) {
+        urls.push(h2.startsWith("http") ? h2 : this.config.baseUrl + h2);
+      }
+    });
+    return urls;
+  }
+
+  async scrapePropertyDetail(u) {
+    const h = await this.fetchHTML(u);
+    const $ = this.loadCheerio(h);
+    const d = this.e.extract($, u, this.config.baseUrl);
+    const v = this.v.validate(d);
+    if (v.isValid) return v.data;
+    const onlyImageMissing = v.errors.length === 1 && v.errors[0] === "Missing images";
+    if (onlyImageMissing) {
+      d.hasImages = false;
+      return d;
+    }
+    return null;
+  }
+}
+
+module.exports = HauzishaScraper;
