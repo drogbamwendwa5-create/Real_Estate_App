@@ -395,11 +395,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
-    elevation: 14,
-    shadowColor: '#0a0a2e',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 22,
+    boxShadow: '0px 8px 22px rgba(10, 10, 46, 0.45)',
   },
 
   // ── Image layer ─────────────────────────────────────────────────────────────
@@ -463,11 +459,7 @@ const styles = StyleSheet.create({
     height: 13,
     borderRadius: 7,
     backgroundColor: '#fff',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.4)',
   },
   liveBadge: {
     position: 'absolute',
@@ -555,11 +547,7 @@ const styles = StyleSheet.create({
   cta: {
     borderRadius: 16,
     overflow: 'hidden',
-    elevation: 6,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(37, 99, 235, 0.5)',
   },
   ctaInner: {
     flexDirection: 'row',

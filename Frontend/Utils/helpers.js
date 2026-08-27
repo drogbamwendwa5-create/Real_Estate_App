@@ -65,3 +65,30 @@ export const generateId = () => {
 export const validateEmail = (email) => {
   return /^\S+@\S+\.\S+$/.test(email);
 };
+
+export const confirmAlert = (title, message, onConfirm, confirmText = 'OK') => {
+  const { Platform, Alert } = require('react-native');
+  if (Platform.OS === 'web') {
+    const isConfirmed = window.confirm(`${title ? title + '\n\n' : ''}${message}`);
+    if (isConfirmed && typeof onConfirm === 'function') {
+      onConfirm();
+    }
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: confirmText, style: 'destructive', onPress: onConfirm },
+    ]);
+  }
+};
+
+export const showAlert = (title, message, onOk) => {
+  const { Platform, Alert } = require('react-native');
+  if (Platform.OS === 'web') {
+    window.alert(`${title ? title + '\n\n' : ''}${message}`);
+    if (typeof onOk === 'function') {
+      onOk();
+    }
+  } else {
+    Alert.alert(title, message, onOk ? [{ text: 'OK', onPress: onOk }] : undefined);
+  }
+};

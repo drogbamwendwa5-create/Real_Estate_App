@@ -197,7 +197,7 @@ exports.assignAdminRole = asyncHandler(async (req, res, next) => {
   const admin = await Admin.findOneAndUpdate(
     { user: userId },
     { role, permissions: permissions || [], isActive: true },
-    { new: true, upsert: true }
+    { returnDocument: 'after', upsert: true }
   );
 
   if (role === 'super-admin') {

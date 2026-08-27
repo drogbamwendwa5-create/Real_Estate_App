@@ -5,7 +5,9 @@ import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, updateUser } from '../../../store/slices/authSlice';
 import authService from '../../../Services/api/authService';
+import { logout as logoutApi } from '../../../Services/api';
 import { useTheme } from '../../../Context/ThemeContext';
+import { confirmAlert } from '../../../Utils/helpers';
 
 const canonicalRole = role => ({ user: 'buyer-tenant', agent: 'agency-professional' }[role] || role || 'guest');
 
@@ -77,15 +79,35 @@ export default function ProfileScreen() {
   }, [role]);
 
   const logout = () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => { dispatch(logoutAction()); router.replace('/auth/login'); } },
-    ]);
+    confirmAlert(
+      'Log out',
+      'Are you sure you want to log out?',
+      async () => {
+        try {
+          await logoutApi();
+        } catch (e) {
+          console.warn('Logout API error:', e);
+        } finally {
+          dispatch(logoutAction());
+          router.replace('/auth/login');
+        }
+      },
+      'Log out'
+    );
   };
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.card }]}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </Pressable>
         <View style={[styles.profileCard, { backgroundColor: theme.colors.card, borderColor: theme.colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>
             <Text style={styles.avatarText}>{(user?.name || 'G').slice(0, 1).toUpperCase()}</Text>
@@ -140,6 +162,7 @@ const styles = StyleSheet.create({
   roleBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 14, paddingHorizontal: 9, paddingVertical: 5, marginTop: 4 },
   roleText: { fontSize: 11, fontWeight: '800' },
   editButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   section: { gap: 7 },
   sectionTitle: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: '800', marginLeft: 4 },
   menuCard: { borderRadius: 18, borderWidth: 1, overflow: 'hidden' },

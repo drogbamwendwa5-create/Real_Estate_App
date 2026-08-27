@@ -227,8 +227,8 @@ export default function ControlCenter({ forcedSection = null, embedded = false }
       <LinearGradient colors={ink} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: Math.max(insets.top, 16) + (embedded ? 4 : 8) }]}>
         <View style={styles.heroTop}>
           {!embedded ? (
-            <Pressable onPress={() => router.back()} style={styles.heroIconBtn} hitSlop={8}>
-              <Ionicons name="arrow-back" size={20} color="#F8FAFC" />
+            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.heroIconBtn} hitSlop={8}>
+              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
             </Pressable>
           ) : <View style={styles.heroIconBtn} />}
           <View style={styles.heroBadge}>

@@ -9,11 +9,11 @@ import { StatusBar } from 'expo-status-bar';
 import { store, persistor } from '../store';
 import { ThemeProvider, useTheme } from '../Context/ThemeContext';
 import { FeatureFlagProvider } from '../Context/FeatureFlagContext';
+import AIFloatingChat from '../Components/AI/AIFloatingChat';
 
 // Suppress known third-party deprecation warnings from dependencies
 LogBox.ignoreLogs([
   'props.pointerEvents is deprecated',
-  '"shadow*" style props are deprecated',
   'useNativeDriver` is not supported',
 ]);
 const originalWarn = console.warn;
@@ -22,7 +22,6 @@ const warnFilter = (...args) => {
   const message = args.map(arg => (typeof arg === 'string' ? arg : '')).join(' ');
   if (
     message.includes('props.pointerEvents is deprecated') ||
-    message.includes('"shadow*" style props are deprecated') ||
     (message.includes('useNativeDriver') && message.includes('not supported')) ||
     message.includes('Text strings must be rendered within a <Text> component')
   ) {
@@ -34,7 +33,6 @@ const errorFilter = (...args) => {
   const message = args.map(arg => (typeof arg === 'string' ? arg : '')).join(' ');
   if (
     message.includes('props.pointerEvents is deprecated') ||
-    message.includes('"shadow*" style props are deprecated') ||
     (message.includes('useNativeDriver') && message.includes('not supported')) ||
     message.includes('Text strings must be rendered within a <Text> component')
   ) {
@@ -73,6 +71,7 @@ function ThemedRoot() {
               animationDuration: 300,
             }}
           />
+          <AIFloatingChat />
         </PaperProvider>
       </PersistGate>
     </Provider>

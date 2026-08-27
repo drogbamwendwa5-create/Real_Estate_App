@@ -36,7 +36,7 @@ exports.createCategory = asyncHandler(async (req, res, next) => {
 // @access  Private/Admin
 exports.updateCategory = asyncHandler(async (req, res, next) => {
   const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
   if (!category) return next(new ErrorResponse('Category not found', 404));

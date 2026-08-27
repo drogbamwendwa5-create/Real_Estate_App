@@ -88,7 +88,11 @@ async function getQueue() {
   if (Queue && connection) {
     try {
       listingQueue = new Queue('listing-queue', { connection });
-      const scheduler = new QueueScheduler('listing-queue', { connection });
+      // BullMQ v5 removed QueueScheduler; guard for API compatibility
+      if (typeof QueueScheduler === 'function') {
+        const scheduler = new QueueScheduler('listing-queue', { connection });
+        void scheduler;
+      }
       console.log('[ListingQueue] BullMQ queue initialized');
       return listingQueue;
     } catch (e) {

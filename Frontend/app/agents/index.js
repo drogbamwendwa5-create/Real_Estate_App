@@ -85,12 +85,23 @@ export default function AgentsListScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          Our Agents
-        </Text>
-        <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-          Meet our team of professionals
-        </Text>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Icon name="arrow-back" size={22} color={theme.colors.primary} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            Our Agents
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+            Meet our team of professionals
+          </Text>
+        </View>
       </View>
 
       <FlatList
@@ -110,9 +121,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,

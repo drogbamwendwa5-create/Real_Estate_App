@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Title, Paragraph, Text, Button, TextInput, Card } from 'react-native-paper';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../Context/ThemeContext';
 
 export default function MortgageCalculatorScreen() {
@@ -29,12 +30,23 @@ export default function MortgageCalculatorScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-            Mortgage Calculator
-          </Text>
-          <Paragraph style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-            Estimate your monthly payments
-          </Paragraph>
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+            style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Mortgage Calculator
+            </Text>
+            <Paragraph style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+              Estimate your monthly payments
+            </Paragraph>
+          </View>
         </View>
 
         {params.price && (
@@ -146,7 +158,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,

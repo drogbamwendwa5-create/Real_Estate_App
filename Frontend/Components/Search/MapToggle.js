@@ -14,6 +14,8 @@ export const MapToggle = ({ viewMode, onToggle }) => {
           { backgroundColor: viewMode === 'list' ? theme.colors.primary : 'transparent' },
         ]}
         onPress={() => onToggle('list')}
+        accessibilityRole="button"
+        accessibilityLabel="List view"
       >
         <Icon 
           name="list" 
@@ -27,6 +29,8 @@ export const MapToggle = ({ viewMode, onToggle }) => {
           { backgroundColor: viewMode === 'map' ? theme.colors.primary : 'transparent' },
         ]}
         onPress={() => onToggle('map')}
+        accessibilityRole="button"
+        accessibilityLabel="Map view"
       >
         <Icon 
           name="map" 

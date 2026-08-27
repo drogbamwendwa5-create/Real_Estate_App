@@ -52,18 +52,24 @@ class MapService {
 
   /**
    * Validates a bounding box
-   * @param {number} north - North latitude
-   * @param {number} south - South latitude
-   * @param {number} east - East longitude
-   * @param {number} west - West longitude
+   * @param {Object|number} boundsOrNorth - Bounds object or north latitude
+   * @param {number} south - South latitude when using positional arguments
+   * @param {number} east - East longitude when using positional arguments
+   * @param {number} west - West longitude when using positional arguments
    * @returns {boolean} True if valid, false otherwise
    */
-  validateBoundingBox(north, south, east, west) {
-    console.log(`[MapService] Validating bounding box: N:${north}, S:${south}, E:${east}, W:${west}`);
+  validateBoundingBox(boundsOrNorth, south, east, west) {
+    const bounds = typeof boundsOrNorth === 'object' && boundsOrNorth !== null
+      ? boundsOrNorth
+      : { north: boundsOrNorth, south, east, west };
+    const { north, south: southBound, east: eastBound, west: westBound } = bounds;
+
+    console.log(`[MapService] Validating bounding box: N:${north}, S:${southBound}, E:${eastBound}, W:${westBound}`);
     return (
-      this.validateCoordinates(north, east) &&
-      this.validateCoordinates(south, west) &&
-      north > south
+      this.validateCoordinates(north, eastBound) &&
+      this.validateCoordinates(southBound, westBound) &&
+      north > southBound &&
+      eastBound > westBound
     );
   }
 }

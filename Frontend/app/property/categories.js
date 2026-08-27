@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, FlatList, StyleSheet, Text } from 'react-native';
+import React from 'react';
+import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Card, Title, Paragraph, Chip } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const categories = [
   { id: '1', name: 'Apartment', icon: 'home', count: 120 },
@@ -12,6 +14,7 @@ const categories = [
 ];
 
 export default function CategoriesScreen() {
+  const router = useRouter();
   const renderCategory = ({ item }) => (
     <Card style={styles.card}>
       <Card.Content style={styles.cardContent}>
@@ -30,7 +33,18 @@ export default function CategoriesScreen() {
       contentContainerStyle={styles.container}
       numColumns={2}
       ListHeaderComponent={
-        <Text style={styles.header}>Browse by Category</Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+            style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={22} color="#2563EB" />
+          </TouchableOpacity>
+          <Text style={styles.header}>Browse by Category</Text>
+        </View>
       }
     />
   );
@@ -38,7 +52,9 @@ export default function CategoriesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
-  header: { fontSize: 22, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
+  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: '#fff' },
+  header: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', flex: 1 },
   card: { flex: 1, margin: 8, minWidth: 150 },
   cardContent: { alignItems: 'center', padding: 16 },
   chip: { marginBottom: 8 },

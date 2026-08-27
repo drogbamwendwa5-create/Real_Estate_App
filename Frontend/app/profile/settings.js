@@ -1,16 +1,32 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, Switch } from 'react-native';
+import { Alert, View, ScrollView, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { List, Button, Text, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
+import { logout as logoutApi } from '../../Services/api';
+import { logout as logoutAction } from '../../store/slices/authSlice';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(true);
 
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+          style={styles.backButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+        </TouchableOpacity>
+      </View>
       <List.Section>
         <List.Subheader>Preferences</List.Subheader>
         <List.Item
@@ -50,7 +66,24 @@ export default function SettingsScreen() {
         />
       </List.Section>
 
-      <Button mode="outlined" style={styles.logout} onPress={() => {}}>
+      <Button
+        mode="outlined"
+        style={styles.logout}
+        onPress={() => {
+          Alert.alert('Log out', 'Are you sure you want to log out?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Log out',
+              style: 'destructive',
+              onPress: async () => {
+                await logoutApi();
+                dispatch(logoutAction());
+                router.replace('/auth/login');
+              },
+            },
+          ]);
+        }}
+      >
         Logout
       </Button>
     </ScrollView>
@@ -59,5 +92,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 15, backgroundColor: '#F8FAFC' },
+  headerRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   logout: { margin: 16 },
 });

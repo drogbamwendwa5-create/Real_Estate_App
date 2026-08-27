@@ -19,10 +19,21 @@ export default function SettingsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView style={{ backgroundColor: theme.colors.background }}>
         <View style={[styles.header, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Settings</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Manage your account settings
-          </Text>
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+            style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Settings</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+              Manage your account settings
+            </Text>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -77,8 +88,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 24,
     marginBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
   title: {
     fontSize: 28,

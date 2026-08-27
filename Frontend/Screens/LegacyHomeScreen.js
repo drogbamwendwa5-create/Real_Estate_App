@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -234,6 +235,14 @@ const VideoHUD = ({ scrollY }) => {
 const HomeScreen = () => {
   const { theme, isDarkMode } = useTheme();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  // Responsive grid: 2 cols mobile, 3 cols tablet, 4 cols desktop
+  const numColumns = useMemo(() => {
+    if (width >= 1280) return 4;
+    if (width >= 900) return 3;
+    return 2;
+  }, [width]);
 
   const [properties, setProperties] = useState([]);
   const [featuredProperties, setFeaturedProperties] = useState([]);
@@ -516,9 +525,10 @@ const HomeScreen = () => {
           ref={flatListRef}
           data={filteredProperties}
           keyExtractor={keyExtractor}
-          numColumns={2}
-          columnWrapperStyle={styles.colWrap}
-          contentContainerStyle={styles.listContent}
+          key={numColumns}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.colWrap : null}
+          contentContainerStyle={[styles.listContent, width >= 900 && { paddingHorizontal: 16 }]}
           ListHeaderComponent={renderListHeader}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -643,11 +653,7 @@ const styles = StyleSheet.create({
     height: 13,
     borderRadius: 7,
     backgroundColor: '#fff',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.5)',
   },
   liveBadge: {
     position: 'absolute',
@@ -892,11 +898,7 @@ const styles = StyleSheet.create({
     right: 20,
     borderRadius: 28,
     overflow: 'hidden',
-    elevation: 10,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    boxShadow: '0px 4px 10px rgba(37, 99, 235, 0.5)',
   },
   fabGrad: {
     width: 52,

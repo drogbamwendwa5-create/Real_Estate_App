@@ -176,7 +176,7 @@ export default function AdvancedTools({ embedded = false } = {}) {
       <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
         <Stack.Screen options={{ title: 'Tools', headerShown: false }} />
         <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, 16) + 12, paddingBottom: 40 + insets.bottom }]}>
-          <Pressable onPress={() => router.back()} style={styles.backPlain}>
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.backPlain}>
             <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
           </Pressable>
           <Text style={[styles.plainTitle, { color: theme.colors.text }]}>{role === 'admin' ? 'Moderation tools' : 'Professional workspace'}</Text>
@@ -204,7 +204,7 @@ export default function AdvancedTools({ embedded = false } = {}) {
       <LinearGradient colors={['#0B1220', '#152238']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: Math.max(insets.top, 16) + (embedded ? 4 : 8) }]}>
         <View style={styles.heroTop}>
           {!embedded ? (
-            <Pressable onPress={() => router.back()} style={styles.heroIconBtn}>
+            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.heroIconBtn}>
               <Ionicons name="arrow-back" size={20} color="#F8FAFC" />
             </Pressable>
           ) : <View style={styles.heroIconBtn} />}

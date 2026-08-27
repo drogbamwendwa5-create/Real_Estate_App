@@ -16,3 +16,5 @@ Thumbs.db
 *.swo
 coverage/
 .nyc_output/
+# Local DB cleanup snapshots (contain production data)
+Backend/backups/

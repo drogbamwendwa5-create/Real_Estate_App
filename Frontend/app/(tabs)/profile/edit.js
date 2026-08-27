@@ -79,6 +79,17 @@ export default function EditProfileScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Icon name="arrow-back" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+
       <Surface style={[styles.avatarSection, { backgroundColor: theme.colors.surface }]}>
         <View style={styles.avatarContainer}>
           {avatar?.uri || user?.avatar?.url ? (

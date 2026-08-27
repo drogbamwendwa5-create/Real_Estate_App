@@ -72,7 +72,7 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
   }
 
   review = await Review.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 

@@ -216,6 +216,15 @@ const MapScreen = () => {
   return (
     <View style={styles.container}>
       <View style={[styles.topOverlay, { zIndex: 10 }]}>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/explore')}
+          style={[styles.backButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
         <PremiumSearchBar
           onLocationSelect={(loc) => {
             if (mapRef.current) {
@@ -309,7 +318,13 @@ const MapScreen = () => {
       {showSearchHere && !loading && (
         <View style={styles.searchHereContainer}>
           <TouchableOpacity
-            style={[styles.searchHereBtn, { backgroundColor: theme.colors.surface, shadowColor: theme.shadows?.md || '#000' }]}
+            style={[
+              styles.searchHereBtn,
+              {
+                backgroundColor: theme.colors.surface,
+                boxShadow: theme.shadows?.md?.boxShadow || '0px 3px 4px rgba(0, 0, 0, 0.1)',
+              },
+            ]}
             onPress={handleSearchHere}
           >
             <Ionicons name="search" size={16} color={theme.colors.primary} style={{ marginRight: theme.spacing?.xs || 4 }} />
@@ -382,6 +397,16 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 16,
   },
+  backButton: {
+    alignSelf: 'flex-start',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
   loadingContainer: {
     position: 'absolute',
     top: '50%',
@@ -401,7 +426,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    elevation: 4,
+    boxShadow: '0px 3px 4px rgba(0, 0, 0, 0.1)',
   },
   actionButtonsContainer: {
     position: 'absolute',

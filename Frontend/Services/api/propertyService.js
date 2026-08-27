@@ -1,6 +1,19 @@
 import api from '../../Config/api';
+import { Image } from 'expo-image';
+
+const propertyCache = new Map();
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 
 class PropertyService {
+  getCachedAggregatedProperties(params = {}) {
+    const key = JSON.stringify(params);
+    const cached = propertyCache.get(key);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+      return cached.data;
+    }
+    return null;
+  }
+
   async getProperties(params) {
     try {
       const response = await api.get('/properties', { params });
@@ -11,11 +24,38 @@ class PropertyService {
     }
   }
 
-  async getAggregatedProperties(params) {
+  async getAggregatedProperties(params = {}, options = {}) {
+    const key = JSON.stringify(params);
+    if (!options.skipCache) {
+      const cached = propertyCache.get(key);
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+        return cached.data;
+      }
+    }
+
     try {
-      console.log(api.defaults.baseURL);
       const response = await api.get('/property-aggregation/properties', { params });
-      return response.data;
+      const data = response.data;
+
+      // Save to memory cache
+      propertyCache.set(key, {
+        timestamp: Date.now(),
+        data,
+      });
+
+      // Prefetch first few property images in background for top-down instant rendering
+      const list = data?.data || data?.properties || (Array.isArray(data) ? data : []);
+      if (Array.isArray(list)) {
+        list.slice(0, 8).forEach((item) => {
+          const img = item?.image || (item?.images && item.images[0]);
+          const url = typeof img === 'string' ? img : img?.url || img?.src;
+          if (url && typeof url === 'string') {
+            Image.prefetch(url).catch(() => {});
+          }
+        });
+      }
+
+      return data;
     } catch (error) {
       const errorMessage = error?.response?.data?.error || error?.message || error?.toString() || 'Unknown error';
       throw new Error(errorMessage);

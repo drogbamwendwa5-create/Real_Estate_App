@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, FlatList, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +14,15 @@ export default function SavedScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
   const savedProperties = useSelector((state) => state.favourite?.favourites || []);
+
+  // Responsive: 1 col mobile, 2 cols tablet, 3 cols desktop
+  const numColumns = useMemo(() => {
+    if (width >= 1280) return 3;
+    if (width >= 640) return 2;
+    return 1;
+  }, [width]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -34,14 +42,20 @@ export default function SavedScreen() {
         <FlatList
           data={savedProperties}
           keyExtractor={(item) => (item?._id || item?.id || Math.random().toString()).toString()}
-          contentContainerStyle={styles.listContent}
+          key={numColumns}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+          contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: 12 }]}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <PropertyCard
-              property={item}
-              onPress={() => router.push(`/property/${item?._id || item?.id}`)}
-              onFavorite={() => dispatch(toggleFavouriteAction(item))}
-            />
+            <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
+              <PropertyCard
+                property={item}
+                onPress={() => router.push(`/property/${item?._id || item?.id}`)}
+                onFavorite={() => dispatch(toggleFavouriteAction(item))}
+                compact={numColumns > 1}
+              />
+            </View>
           )}
           ListFooterComponent={<View style={{ height: 24 }} />}
         />
@@ -92,5 +106,10 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
 });

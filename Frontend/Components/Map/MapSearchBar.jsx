@@ -111,11 +111,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 25,
     paddingHorizontal: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.2)',
     height: 50,
   },
   icon: {
@@ -133,11 +129,7 @@ const styles = StyleSheet.create({
   resultsContainer: {
     marginTop: 8,
     borderRadius: 12,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
+    boxShadow: '0px 2px 2px rgba(0, 0, 0, 0.2)',
     maxHeight: 200,
   },
   resultItem: {

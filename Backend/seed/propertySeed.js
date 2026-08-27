@@ -26,7 +26,10 @@ async function seedProperties() {
         location: { type: 'Point', coordinates: [36.8219, -1.2921] },
         category: catMap['apartment'] || null,
         agent: null,
-        images: [],
+        images: [
+          { url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267', isFeatured: true },
+          { url: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6', isFeatured: false },
+        ],
       },
       {
         title: 'Spacious House in Mombasa',
@@ -42,7 +45,10 @@ async function seedProperties() {
         location: { type: 'Point', coordinates: [39.6682, -4.0435] },
         category: catMap['house'] || null,
         agent: null,
-        images: [],
+        images: [
+          { url: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994', isFeatured: true },
+          { url: 'https://images.unsplash.com/photo-1600596542815-27bfef402323', isFeatured: false },
+        ],
       },
     ];
 

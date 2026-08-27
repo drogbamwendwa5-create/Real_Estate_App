@@ -99,11 +99,7 @@ const styles = StyleSheet.create({
     right: 20,
     padding: 16,
     borderRadius: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
+    boxShadow: '0px 4px 4.65px rgba(0, 0, 0, 0.3)',
   },
   instruction: {
     textAlign: 'center',

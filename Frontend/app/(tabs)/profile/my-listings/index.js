@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl, useWindowDimensions } from 'react-native';
 import { Text, Button, FAB } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../../../Context/ThemeContext';
@@ -12,11 +12,18 @@ import { useSelector } from 'react-redux';
 export default function MyListingsScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
   const { isAuthenticated } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [listings, setListings] = useState([]);
   const [error, setError] = useState(null);
+
+  // Responsive: 1 on mobile, 2 on tablet/desktop
+  const numColumns = useMemo(() => {
+    if (width >= 900) return 2;
+    return 1;
+  }, [width]);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -82,19 +89,33 @@ export default function MyListingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-          My Listings
-        </Text>
-        <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-          {listings.length} {listings.length === 1 ? 'property' : 'properties'}
-        </Text>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Icon name="arrow-back" size={22} color={theme.colors.primary} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+            My Listings
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+            {listings.length} {listings.length === 1 ? 'property' : 'properties'}
+          </Text>
+        </View>
       </View>
 
       {listings.length > 0 ? (
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id?.toString() || item._id?.toString()}
-          contentContainerStyle={styles.listContent}
+          key={numColumns}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+          contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: 12 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.colors.primary]} />
@@ -102,29 +123,29 @@ export default function MyListingsScreen() {
           renderItem={({ item }) => {
             const propertyId = item.id || item._id;
             return (
-            <View>
-              <PropertyCard
-                property={item}
-                onPress={() => router.push(`/property/${propertyId}`)}
-                onFavorite={() => {}}
-              />
-              <View style={styles.cardActions}>
-                <TouchableOpacity 
-                  style={[styles.actionButton, { borderColor: theme.colors.primary }]}
+              <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
+                <PropertyCard
+                  property={item}
+                  compact={numColumns > 1}
                   onPress={() => router.push(`/listing/${propertyId}`)}
-                >
-                  <Icon name="pencil" size={16} color={theme.colors.primary} />
-                  <Text style={[styles.actionText, { color: theme.colors.primary }]}>Edit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.actionButton, { borderColor: theme.colors.error }]}
-                  onPress={() => {}}
-                >
-                  <Icon name="trash" size={16} color={theme.colors.error} />
-                  <Text style={[styles.actionText, { color: theme.colors.error }]}>Delete</Text>
-                </TouchableOpacity>
+                />
+                <View style={styles.cardActions}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: theme.colors.surface }]}
+                    onPress={() => {/* TODO: edit action */}}
+                  >
+                    <Icon name="create-outline" size={16} color={theme.colors.primary} />
+                    <Text style={[styles.actionText, { color: theme.colors.primary }]}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: theme.colors.surface }]}
+                    onPress={() => {/* TODO: delete action */}}
+                  >
+                    <Icon name="trash" size={16} color={theme.colors.error} />
+                    <Text style={[styles.actionText, { color: theme.colors.error }]}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
             );
           }}
           ListFooterComponent={<View style={{ height: 80 }} />}
@@ -159,9 +180,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,
@@ -180,15 +212,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
   },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
   actionText: {
     fontSize: 14,

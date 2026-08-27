@@ -64,6 +64,15 @@ export default function AgentDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <TouchableOpacity
+        onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+        style={[styles.backButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Icon name="arrow-back" size={22} color={theme.colors.primary} />
+      </TouchableOpacity>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
@@ -188,6 +197,18 @@ export default function AgentDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    zIndex: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
     alignItems: 'center',

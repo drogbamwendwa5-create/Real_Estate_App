@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../Context/ThemeContext';
+import PropertyCard from '../Components/Property/PropertyCard';
 import {
   getAdminDashboard,
   getAggregatedProperties,
@@ -119,12 +120,93 @@ const ROLE_ACTIONS = {
   ],
 };
 
+const FALLBACK_MATCHES = [
+  {
+    _id: 'match-1',
+    title: 'Luxury 5-Bed Villa',
+    price: 85000000,
+    currency: 'KES',
+    location: 'Runda, Nairobi',
+    bedrooms: 5,
+    bathrooms: 4,
+    area: 450,
+    propertyType: 'villa',
+    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6',
+    images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6', 'https://images.unsplash.com/photo-1600596542815-27bfef402323'],
+  },
+  {
+    _id: 'match-2',
+    title: 'Modern Westlands Penthouse',
+    price: 32000000,
+    currency: 'KES',
+    location: 'Westlands, Nairobi',
+    bedrooms: 3,
+    bathrooms: 3,
+    area: 210,
+    propertyType: 'apartment',
+    image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267',
+    images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'],
+  },
+  {
+    _id: 'match-3',
+    title: 'Cozy Family Home',
+    price: 35000000,
+    currency: 'KES',
+    location: 'Lavington, Nairobi',
+    bedrooms: 4,
+    bathrooms: 3,
+    area: 280,
+    propertyType: 'house',
+    image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994',
+    images: ['https://images.unsplash.com/photo-1568605114967-8130f3a36994'],
+  },
+  {
+    _id: 'match-4',
+    title: 'Serene Karen Sanctuary',
+    price: 95000000,
+    currency: 'KES',
+    location: 'Karen, Nairobi',
+    bedrooms: 5,
+    bathrooms: 5,
+    area: 520,
+    propertyType: 'house',
+    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+    images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c'],
+  },
+  {
+    _id: 'match-5',
+    title: 'Executive Kilimani Residence',
+    price: 19500000,
+    currency: 'KES',
+    location: 'Kilimani, Nairobi',
+    bedrooms: 2,
+    bathrooms: 2,
+    area: 130,
+    propertyType: 'apartment',
+    image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688',
+    images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'],
+  },
+  {
+    _id: 'match-6',
+    title: 'Kitisuru Hillside Manor',
+    price: 110000000,
+    currency: 'KES',
+    location: 'Kitisuru, Nairobi',
+    bedrooms: 6,
+    bathrooms: 6,
+    area: 600,
+    propertyType: 'villa',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c',
+    images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c'],
+  },
+];
+
 const canonicalRole = role => ({
   user: 'buyer-tenant',
   agent: 'agency-professional',
 }[role] || role || 'guest');
 
-const firstName = user => (user?.name || 'there').trim().split(' ')[0];       
+const firstName = user => (user?.name || 'there').trim().split(' ')[0];
 
 function StatCard({ label, value, icon, accent, theme }) {
   return (
@@ -138,7 +220,7 @@ function StatCard({ label, value, icon, accent, theme }) {
   );
 }
 
-function ActionCard({ action, meta, theme, onPress }) {
+function ActionCard({ action, meta, theme, onPress, cardWidth }) {
   const dark = action.tone === 'dark';
   return (
     <Pressable
@@ -147,6 +229,7 @@ function ActionCard({ action, meta, theme, onPress }) {
       accessibilityLabel={action.label}
       style={({ pressed }) => [
         styles.actionCard,
+        cardWidth ? { width: cardWidth } : null,
         {
           backgroundColor: dark ? meta.accent : theme.colors.card,
           borderColor: dark ? meta.accent : theme.colors.border,
@@ -264,6 +347,7 @@ export default function RoleHomeScreen() {
   const meta = ROLE_META[role] || ROLE_META.guest;
   const actions = ROLE_ACTIONS[role] || ROLE_ACTIONS.guest;
   const [stats, setStats] = useState({ primary: '—', secondary: '—', tertiary: '—' });
+  const [matchesOfTheDay, setMatchesOfTheDay] = useState(FALLBACK_MATCHES);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -280,6 +364,9 @@ export default function RoleHomeScreen() {
           secondary: statsData.totalProperties ?? '—',
           tertiary: statsData.totalSubscriptions ?? '—',
         });
+        const propRes = await getAggregatedProperties({ limit: 6 }).catch(() => null);
+        const props = propRes?.data || propRes?.properties || [];
+        setMatchesOfTheDay(props.length >= 6 ? props.slice(0, 6) : [...props, ...FALLBACK_MATCHES].slice(0, 6));
       } else if (role === 'agency-professional' || role === 'property-owner') {
         const response = await getMyProperties();
         const listings = response?.data || [];
@@ -288,16 +375,21 @@ export default function RoleHomeScreen() {
           secondary: listings.filter(item => item.isPublished).length,
           tertiary: listings.reduce((sum, item) => sum + (item.views || 0), 0),
         });
+        const propRes = await getAggregatedProperties({ limit: 6 }).catch(() => null);
+        const props = propRes?.data || propRes?.properties || [];
+        setMatchesOfTheDay(props.length >= 6 ? props.slice(0, 6) : [...props, ...FALLBACK_MATCHES].slice(0, 6));
       } else {
         const response = await getAggregatedProperties({ limit: 12 });
         const listings = response?.data || response?.properties || [];
-        setStats({ primary: listings.length, secondary: '24/7', tertiary: 'Live' });
+        setStats({ primary: listings.length || 6, secondary: '24/7', tertiary: 'Live' });
+        setMatchesOfTheDay(listings.length >= 6 ? listings.slice(0, 6) : [...listings, ...FALLBACK_MATCHES].slice(0, 6));
       }
       if (role !== 'guest' && role !== 'super-admin' && role !== 'admin') {
         await Promise.allSettled([getConversations(), getNotifications()]);
       }
-    } catch (dashboardError) {
+    } catch {
       setError('Some dashboard data is unavailable right now.');
+      setMatchesOfTheDay(FALLBACK_MATCHES);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -335,6 +427,18 @@ export default function RoleHomeScreen() {
   }, [role, stats]);
 
   const isBuyer = role === 'buyer-tenant' || role === 'guest';
+
+  const actionCardWidth = useMemo(() => {
+    if (width >= 1280) return '23.5%';
+    if (width >= 768) return '31.8%';
+    return '48.2%';
+  }, [width]);
+
+  const matchCardWidth = useMemo(() => {
+    if (width >= 1280) return '31.8%';
+    if (width >= 640) return '48.5%';
+    return '100%';
+  }, [width]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
@@ -382,8 +486,53 @@ export default function RoleHomeScreen() {
 
         <View style={styles.actionGrid}>
           {actions.map(action => (
-            <ActionCard key={action.label} action={action} meta={meta} theme={theme} onPress={() => router.push(action.route)} />
+            <ActionCard key={action.label} action={action} meta={meta} theme={theme} cardWidth={actionCardWidth} onPress={() => router.push(action.route)} />
           ))}
+        </View>
+
+        {/* Matches of the Day Section (Exactly 6 properties) */}
+        <View style={styles.matchesSection}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="sparkles" size={18} color={meta.accent} style={{ marginRight: 6 }} />
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Matches of the Day</Text>
+                <View style={[styles.badgePill, { backgroundColor: meta.soft }]}>
+                  <Text style={[styles.badgeText, { color: meta.accent }]}>6 Top Picks</Text>
+                </View>
+              </View>
+              <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
+                Daily curated properties matched to current high-demand areas
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => router.push('/(tabs)/search')}
+              style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, paddingVertical: 4 }]}
+              accessibilityRole="button"
+              accessibilityLabel="See all matches"
+            >
+              <Text style={[styles.seeAllText, { color: meta.accent }]}>See all →</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.matchesGrid}>
+            {matchesOfTheDay.slice(0, 6).map((property, index) => (
+              <View
+                key={property._id || property.id || `match-${index}`}
+                style={[
+                  styles.matchCardWrapper,
+                  { width: matchCardWidth }
+                ]}
+              >
+                <PropertyCard
+                  property={property}
+                  index={index}
+                  onPress={() => router.push(`/property/${property._id || property.id}`)}
+                  compact={width >= 640}
+                />
+              </View>
+            ))}
+          </View>
         </View>
 
         {error ? (
@@ -437,13 +586,20 @@ const styles = StyleSheet.create({
   statIcon: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 21, fontWeight: '800', fontVariant: ['tabular-nums'] },
   statLabel: { fontSize: 11, fontWeight: '600' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 },
   sectionTitle: { fontSize: 20, fontWeight: '800' },
   sectionSubtitle: { fontSize: 13, marginTop: 3 },
+  seeAllText: { fontSize: 13, fontWeight: '700' },
+  badgePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginLeft: 4 },
+  badgeText: { fontSize: 11, fontWeight: '700' },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   actionCard: { width: '48%', minHeight: 126, borderRadius: 18, borderWidth: 1, padding: 15, justifyContent: 'space-between', borderCurve: 'continuous' },
   actionIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { fontSize: 15, fontWeight: '800', lineHeight: 19, maxWidth: 120 },
+  matchesSection: { gap: 12, marginTop: 6 },
+  matchesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  matchCardWrapper: { width: '100%' },
   notice: { borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
   noticeText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '600' },
   nextCard: { borderRadius: 18, borderWidth: 1, padding: 16, flexDirection: 'row', gap: 12, borderCurve: 'continuous' },

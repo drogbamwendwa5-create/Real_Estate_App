@@ -1,6 +1,8 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, Linking } from 'react-native';
+import { ScrollView, StyleSheet, Text, Linking, TouchableOpacity, View } from 'react-native';
 import { List, Button, Title, Paragraph } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const faqs = [
   { q: 'How do I create a property listing?', a: 'Tap the "Create Listing" button from the home screen and fill in the property details.' },
@@ -11,8 +13,20 @@ const faqs = [
 ];
 
 export default function HelpScreen() {
+  const router = useRouter();
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+          style={styles.backButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+        </TouchableOpacity>
+      </View>
       <Title style={styles.title}>Help & Support</Title>
       <Paragraph style={styles.subtitle}>Frequently Asked Questions</Paragraph>
 
@@ -35,6 +49,8 @@ export default function HelpScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
+  headerRow: { flexDirection: 'row', marginBottom: 8 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
   subtitle: { fontSize: 14, color: '#64748B', marginBottom: 16 },
   faqItem: { backgroundColor: '#fff', marginBottom: 8 },

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useTheme } from '../../../Context/ThemeContext';
 import { updatePassword } from '../../../Services/api';
 import { removeToken } from '../../../Utils/storage';
 import { useAuth } from '../../../Hooks/useAuth';
 
 export default function ChangePasswordScreen({ navigation }) {
+  const router = useRouter();
   const { theme } = useTheme();
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,7 @@ export default function ChangePasswordScreen({ navigation }) {
       Alert.alert('Success', 'Password updated successfully', [
         {
           text: 'OK',
-          onPress: () => navigation.goBack(),
+          onPress: () => navigation.canGoBack?.() ? navigation.goBack() : router.replace('/(tabs)/profile'),
         },
       ]);
 
@@ -111,10 +113,21 @@ export default function ChangePasswordScreen({ navigation }) {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView style={{ backgroundColor: theme.colors.background }}>
         <View style={[styles.header, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Change Password</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Update your account password
-          </Text>
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+            style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>Change Password</Text>
+            <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+              Update your account password
+            </Text>
+          </View>
         </View>
 
         <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
@@ -161,8 +174,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 24,
     marginBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
   title: {
     fontSize: 28,

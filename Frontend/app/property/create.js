@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { Button, HelperText, Text, TextInput } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { createProperty } from '../../Services/api';
 import { useTheme } from '../../Context/ThemeContext';
 
@@ -56,6 +57,15 @@ export default function CreatePropertyScreen() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+      <TouchableOpacity
+        onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+        style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+      </TouchableOpacity>
       <Text style={[styles.title, { color: theme.colors.text }]}>Create listing</Text>
       <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Save a complete draft now, then submit it for verification.</Text>
       <TextInput label="Title *" value={form.title} onChangeText={value => update('title', value)} mode="outlined" style={styles.input} />
@@ -81,6 +91,7 @@ export default function CreatePropertyScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 18, gap: 12, paddingBottom: 50 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 30, fontWeight: '900' },
   subtitle: { fontSize: 14, lineHeight: 20, marginBottom: 8 },
   input: { backgroundColor: 'transparent' },

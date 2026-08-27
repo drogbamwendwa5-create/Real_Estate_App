@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../Context/ThemeContext';
 
+const FALLBACK_AVATAR = require('../../assets/icon.png');
+
 export const AgentCard = ({ agent, onPress, style }) => {
   const { theme } = useTheme();
 
@@ -15,7 +17,7 @@ export const AgentCard = ({ agent, onPress, style }) => {
       activeOpacity={0.9}
     >
       <Image 
-        source={{ uri: agent.avatar || agent.image || 'https://via.placeholder.com/60' }} 
+        source={agent.avatar || agent.image ? { uri: agent.avatar || agent.image } : FALLBACK_AVATAR}
         style={styles.avatar}
         resizeMode="cover"
       />

@@ -88,7 +88,7 @@ exports.updateProperty = asyncHandler(async (req, res, next) => {
   }
 
   const updatedProperty = await Property.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
+    returnDocument: 'after',
     runValidators: true,
   });
 

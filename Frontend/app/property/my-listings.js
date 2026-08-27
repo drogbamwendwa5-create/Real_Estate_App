@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Card, Title, Paragraph, Text, Button, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../Context/ThemeContext';
 import { formatLocation } from '../../Utils/helpers';
 import { getMyProperties } from '../../Services/api';
@@ -52,8 +53,19 @@ export default function MyListingsScreen() {
   return (
     <View style={styles.container}>
       <Surface style={styles.header}>
-        <Title style={styles.headerTitle}>My Listings</Title>
-        <Paragraph style={styles.headerSubtitle}>Manage your properties</Paragraph>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.primary} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Title style={styles.headerTitle}>My Listings</Title>
+          <Paragraph style={styles.headerSubtitle}>Manage your properties</Paragraph>
+        </View>
       </Surface>
       <FlatList
         data={properties}
@@ -79,9 +91,20 @@ const createStyles = (theme) => StyleSheet.create({
   },
   header: {
     padding: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.surface,
     ...theme.shadows.sm,
     marginBottom: theme.spacing.md,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.md,
   },
   headerTitle: {
     fontSize: 24,

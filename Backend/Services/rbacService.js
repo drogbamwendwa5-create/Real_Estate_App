@@ -33,7 +33,7 @@ const seedRbac = async () => {
       const permission = await Permission.findOneAndUpdate(
         { key: permissionKey },
         { $setOnInsert: { key: permissionKey, description: permissionKey.replace(/-/g, ' ') } },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
       permissionIds.push(permission._id);
     }

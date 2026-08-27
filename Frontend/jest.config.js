@@ -8,6 +8,9 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|@react-navigation|expo[^/]*|@expo[^/]*|immer|@reduxjs|redux|react-redux|reselect|react-native-reanimated|react-native-gesture-handler|react-native-safe-area-context|react-native-screens|react-native-maps|@react-native-async-storage|@react-native-community|react-native-paper|react-native-vector-icons|react-native-toast-message|react-native-skeleton-content|react-native-swiper|redux-persist|yup|react-hook-form|@hookform|axios)/)',
   ],
+  transform: {
+    '^.+\\.[jt]sx?$': 'babel-jest',
+  },
   moduleFileExtensions: ['js', 'jsx', 'json', 'ts', 'tsx'],
   testMatch: ['**/__tests__/**/*.test.js', '**/*.test.js'],
   collectCoverageFrom: ['**/*.{js,jsx}', '!**/node_modules/**', '!**/coverage/**'],

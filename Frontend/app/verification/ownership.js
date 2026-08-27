@@ -11,6 +11,15 @@ export default function OwnershipVerification() {
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen options={{ title: 'Verify ownership', headerShown: false }} />
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </Pressable>
         <View style={[styles.hero, { backgroundColor: theme.colors.primary }]}>
           <Ionicons name="shield-checkmark-outline" size={34} color="#fff" />
           <Text style={styles.heroTitle}>Build buyer confidence.</Text>
@@ -37,6 +46,7 @@ export default function OwnershipVerification() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { padding: 20, paddingTop: 14, paddingBottom: 60, gap: 16 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   hero: { borderRadius: 24, padding: 22, gap: 9 },
   heroTitle: { color: '#fff', fontSize: 28, fontWeight: '900' },
   heroText: { color: '#FFFFFFCC', fontSize: 14, lineHeight: 20 },

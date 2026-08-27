@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions, Platform } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -44,6 +44,20 @@ const MESSAGES = [
 export default function ExploreScreen() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+
+  const handleNavigate = (route) => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined' && document.activeElement?.blur) {
+      document.activeElement.blur();
+    }
+    router.push(route);
+  };
+
+  const cardWidth = useMemo(() => {
+    if (width >= 1280) return 320;
+    if (width >= 768) return 300;
+    return Math.min(300, Math.max(260, width * 0.76));
+  }, [width]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top']}>
@@ -53,14 +67,23 @@ export default function ExploreScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.header}>
-          <View>
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+              style={[styles.backButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.colors.primary} />
+            </TouchableOpacity>
             <Text style={[styles.eyebrow, { color: theme.colors.primary }]}>DISCOVER MORE</Text>
             <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Explore</Text>
             <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>Find spaces that fit your next chapter.</Text>
           </View>
           <TouchableOpacity
             style={[styles.mapButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
-            onPress={() => router.push('/map')}
+            onPress={() => handleNavigate('/map')}
             accessibilityRole="button"
             accessibilityLabel="Open map"
           >
@@ -73,7 +96,7 @@ export default function ExploreScreen() {
             <Text style={styles.heroEyebrow}>SMARTER SEARCH</Text>
             <Text style={styles.heroTitle}>Your place is out there.</Text>
             <Text style={styles.heroSubtitle}>Browse curated listings or search the whole map.</Text>
-            <TouchableOpacity style={styles.heroButton} onPress={() => router.push('/(tabs)/search')}>
+            <TouchableOpacity style={styles.heroButton} onPress={() => handleNavigate('/(tabs)/search')}>
               <Text style={[styles.heroButtonText, { color: theme.colors.primary }]}>Start exploring</Text>
               <Ionicons name="arrow-forward" size={16} color={theme.colors.primary} />
             </TouchableOpacity>
@@ -89,7 +112,7 @@ export default function ExploreScreen() {
             <TouchableOpacity
               key={category.label}
               style={[styles.category, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
-              onPress={() => router.push('/(tabs)/search')}
+              onPress={() => handleNavigate('/(tabs)/search')}
             >
               <View style={[styles.categoryIcon, { backgroundColor: `${category.color}18` }]}>
                 <Ionicons name={category.icon} size={21} color={category.color} />
@@ -101,14 +124,14 @@ export default function ExploreScreen() {
 
         <View style={styles.sectionHeading}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Curated for you</Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/search')}>
+          <TouchableOpacity onPress={() => handleNavigate('/(tabs)/search')}>
             <Text style={[styles.viewAll, { color: theme.colors.primary }]}>See all</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.propertyRow}>
           {FEATURED.map((property) => (
-            <View key={property.id} style={styles.propertyItem}>
-              <PropertyCard property={property} onPress={() => router.push(`/property/${property.id}`)} />
+            <View key={property.id} style={[styles.propertyItem, { width: cardWidth }]}>
+              <PropertyCard property={property} onPress={() => handleNavigate(`/property/${property.id}`)} />
             </View>
           ))}
         </ScrollView>
@@ -118,12 +141,12 @@ export default function ExploreScreen() {
             <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Stay in the loop</Text>
             <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>Your latest conversations</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/chat')}>
+          <TouchableOpacity onPress={() => handleNavigate('/chat')}>
             <Text style={[styles.viewAll, { color: theme.colors.primary }]}>Messages</Text>
           </TouchableOpacity>
         </View>
         {MESSAGES.map((message) => (
-          <MessageBubble key={message.id} message={message} onPress={() => router.push(`/chat/${message.id}`)} />
+          <MessageBubble key={message.id} message={message} onPress={() => handleNavigate(`/chat/${message.id}`)} />
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -145,6 +168,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 34, lineHeight: 38, fontWeight: '800' },
   headerSubtitle: { fontSize: 15, marginTop: 6 },
   mapButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   hero: { marginHorizontal: 20, minHeight: 174, borderRadius: 24, padding: 22, overflow: 'hidden', position: 'relative' },
   heroCopy: { maxWidth: '78%', zIndex: 1 },
   heroEyebrow: { color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: '800', letterSpacing: 1.1 },

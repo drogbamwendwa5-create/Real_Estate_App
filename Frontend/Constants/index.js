@@ -38,10 +38,8 @@ export const FONTS = {
 export const SHADOWS = {
   light: {
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
   },
   dark: {
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
-    elevation: 6,
   },
 };

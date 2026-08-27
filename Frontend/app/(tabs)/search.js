@@ -1,19 +1,21 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Platform } from 'react-native';
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import { Text, Surface } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../Context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PropertyCard from '../../Components/Property/PropertyCard';
+import PropertyCardSkeleton from '../../Components/Property/PropertyCardSkeleton';
 import SectionHeader from '../../Components/Home/SectionHeader';
 import MapToggle from '../../Components/Search/MapToggle';
 import { HeroSearch } from '../../Components/Search/HeroSearch';
 import PropertyService from '../../Services/api/propertyService';
-import OSMMapView from '../../Components/Map/OSMMapView';
+import OSMMapView, { MAP_LAYERS, getPropertyBadge } from '../../Components/Map/OSMMapView';
 import PropertyMapCard from '../../Components/Map/PropertyMapCard';
 import { useDispatch } from 'react-redux';
 import { toggleFavourite as toggleFavouriteAction } from '../../store/slices/favouriteSlice';
 import { formatPrice } from '../../Utils/helpers';
+import { Ionicons } from '@expo/vector-icons';
 
 // Fallback data with Kenyan coordinates used when the backend is unreachable
 const FALLBACK_PROPERTIES = [
@@ -63,20 +65,35 @@ const PAGE_SIZE = 12;
 export default function SearchScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const MapMarker = Platform.OS === 'web' ? View : require('react-native-maps').Marker;
   const { theme } = useTheme();
-  const [properties, setProperties] = useState([]);
+  const { width } = useWindowDimensions();
+  const mapRef = useRef(null);
+
+  // Responsive columns: 1 on mobile, 2 on tablet, 3 on desktop
+  const numColumns = useMemo(() => {
+    if (width >= 1280) return 3;
+    if (width >= 640) return 2;
+    return 1;
+  }, [width]);
+
+  const initialCached = PropertyService.getCachedAggregatedProperties({ page: 1, limit: PAGE_SIZE });
+  const initialList = initialCached?.data || initialCached?.properties || (Array.isArray(initialCached) ? initialCached : []);
+
+  const [properties, setProperties] = useState(initialList);
   const [viewMode, setViewMode] = useState('list');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialList.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [resultsCount, setResultsCount] = useState(0);
+  const [resultsCount, setResultsCount] = useState(initialCached?.total || initialCached?.count || initialList.length);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(initialCached?.totalPages || 1);
   const [currentParams, setCurrentParams] = useState({});
   const [usingFallback, setUsingFallback] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [mapLayer, setMapLayer] = useState('detailed'); // 'detailed' | 'satellite' | 'osm'
   const loadingMoreRef = useRef(false);
   const requestIdRef = useRef(0);
+
+  const SKELETON_ITEMS = useMemo(() => [1, 2, 3, 4, 5, 6], []);
 
   const getPropertyKey = (property, index) => (property?._id || property?.id || `property-${index}`).toString();
 
@@ -88,7 +105,18 @@ export default function SearchScreen() {
       loadingMoreRef.current = true;
       setLoadingMore(true);
     } else {
-      setLoading(true);
+      // Check cache for instant display
+      const cached = PropertyService.getCachedAggregatedProperties({ ...params, page: pageNum, limit: PAGE_SIZE });
+      if (cached) {
+        const cachedList = cached.data || cached.properties || (Array.isArray(cached) ? cached : []);
+        setProperties(cachedList);
+        setResultsCount(cached.total || cached.count || cachedList.length);
+        setTotalPages(cached.totalPages || 1);
+        setPage(pageNum);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
       setUsingFallback(false);
     }
 
@@ -119,7 +147,7 @@ export default function SearchScreen() {
       setPage(pageNum);
       setCurrentParams(params);
       setUsingFallback(false);
-    } catch (error) {
+    } catch {
       if (!isLoadMore && requestId === requestIdRef.current) {
         setProperties(FALLBACK_PROPERTIES);
         setResultsCount(FALLBACK_PROPERTIES.length);
@@ -145,13 +173,13 @@ export default function SearchScreen() {
 
   useEffect(() => {
     loadProperties();
-  }, []);
+  }, [loadProperties]);
 
-  const getPropertyCoords = (item, index) => {
-    const lat = item?.location?.coordinates?.[1] || item?.coordinates?.[1] || item?.latitude;
-    const lng = item?.location?.coordinates?.[0] || item?.coordinates?.[0] || item?.longitude;
+  const getPropertyCoords = useCallback((item, index = 0) => {
+    const lat = item?.location?.coordinates?.[1] ?? item?.coordinates?.[1] ?? item?.latitude;
+    const lng = item?.location?.coordinates?.[0] ?? item?.coordinates?.[0] ?? item?.longitude;
 
-    if (lat && lng) {
+    if (lat != null && lng != null && !isNaN(Number(lat)) && !isNaN(Number(lng))) {
       return { latitude: Number(lat), longitude: Number(lng) };
     }
     // Default fallback coordinates centered around Nairobi with offset per item index
@@ -159,36 +187,271 @@ export default function SearchScreen() {
       latitude: -1.2921 + (index * 0.015) - 0.02,
       longitude: 36.8219 + (index * 0.015) - 0.02,
     };
-  };
+  }, []);
 
   const initialRegion = useMemo(() => {
     if (properties.length > 0) {
-      const coords = getPropertyCoords(properties[0], 0);
-      return {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
-      };
+      let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+      let validCount = 0;
+
+      properties.forEach((p, index) => {
+        const coords = getPropertyCoords(p, index);
+        if (coords?.latitude && coords?.longitude) {
+          minLat = Math.min(minLat, coords.latitude);
+          maxLat = Math.max(maxLat, coords.latitude);
+          minLng = Math.min(minLng, coords.longitude);
+          maxLng = Math.max(maxLng, coords.longitude);
+          validCount++;
+        }
+      });
+
+      if (validCount > 0) {
+        const midLat = (minLat + maxLat) / 2;
+        const midLng = (minLng + maxLng) / 2;
+        const latDelta = Math.max(0.04, (maxLat - minLat) * 1.3);
+        const lngDelta = Math.max(0.04, (maxLng - minLng) * 1.3);
+        return {
+          latitude: midLat,
+          longitude: midLng,
+          latitudeDelta: Math.min(latDelta, 0.4),
+          longitudeDelta: Math.min(lngDelta, 0.4),
+        };
+      }
     }
     return {
       latitude: -1.2921,
       longitude: 36.8219,
-      latitudeDelta: 0.1,
-      longitudeDelta: 0.1,
+      latitudeDelta: 0.08,
+      longitudeDelta: 0.08,
     };
-  }, [properties]);
+  }, [properties, getPropertyCoords]);
 
+  const handleFitAllMarkers = () => {
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(initialRegion, 600);
+    }
+  };
+
+  const toggleMapLayer = () => {
+    const nextLayer = mapLayer === 'detailed' ? 'satellite' : mapLayer === 'satellite' ? 'osm' : 'detailed';
+    setMapLayer(nextLayer);
+    if (mapRef.current?.setLayer) {
+      mapRef.current.setLayer(nextLayer);
+    }
+  };
+
+  const handleMarkerSelect = (item) => {
+    setSelectedProperty(item);
+    const coords = getPropertyCoords(item);
+    if (mapRef.current && coords) {
+      mapRef.current.animateToRegion({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }, 500);
+    }
+  };
+
+  // Safe Native Map Pin Pointer
+  const renderNativeMarkers = () => {
+    if (Platform.OS === 'web') return null;
+    let MarkerComponent = null;
+    try {
+      const maps = require('react-native-maps');
+      MarkerComponent = maps.Marker;
+    } catch {
+      return null;
+    }
+    if (!MarkerComponent) return null;
+
+    return properties.map((item, index) => {
+      const coords = getPropertyCoords(item, index);
+      const isSelected = (selectedProperty?._id || selectedProperty?.id);
+      const isCurrent = isSelected === (item._id || item.id);
+      const badge = getPropertyBadge(item);
+      
+      return (
+        <MarkerComponent
+          key={`native-map-item-${item._id || item.id || index}`}
+          coordinate={coords}
+          anchor={{ x: 0.5, y: 1.0 }}
+          onPress={(e) => {
+            if (e && e.stopPropagation) e.stopPropagation();
+            handleMarkerSelect(item);
+          }}
+          tracksViewChanges={false}
+        >
+          <View style={styles.nativePointerContainer}>
+            <Surface
+              style={[
+                styles.pointerBubble,
+                {
+                  backgroundColor: isCurrent ? theme.colors.primary : theme.colors.surface,
+                  borderColor: isCurrent ? '#FFFFFF' : theme.colors.primary,
+                },
+              ]}
+            >
+              <Ionicons 
+                name={badge.ionicon} 
+                size={11} 
+                color={isCurrent ? '#FFFFFF' : theme.colors.primary} 
+                style={{ marginRight: 4 }} 
+              />
+              <Text
+                style={[
+                  styles.markerBadgeText,
+                  { color: isCurrent ? '#FFFFFF' : theme.colors.text },
+                ]}
+              >
+                {badge.label}
+              </Text>
+            </Surface>
+            <View style={[styles.pointerStem, { borderTopColor: isCurrent ? theme.colors.primary : theme.colors.primary }]} />
+            <View style={[styles.pointerDot, { backgroundColor: isCurrent ? theme.colors.primary : theme.colors.primary }]} />
+          </View>
+        </MarkerComponent>
+      );
+    });
+  };
+
+  // ─── FULLSCREEN MAP MODE ───
+  if (viewMode === 'map') {
+    return (
+      <View style={styles.fullscreenContainer}>
+        <OSMMapView
+          ref={mapRef}
+          initialRegion={initialRegion}
+          style={StyleSheet.absoluteFill}
+          properties={properties}
+          selectedProperty={selectedProperty}
+          onSelectProperty={handleMarkerSelect}
+          onPress={() => setSelectedProperty(null)}
+          mapLayer={mapLayer}
+        >
+          {renderNativeMarkers()}
+        </OSMMapView>
+
+        {/* Floating back button – top-left, over the map */}
+        <SafeAreaView style={styles.mapOverlayTop} pointerEvents="box-none">
+          <View style={styles.mapTopRow} pointerEvents="box-none">
+            <TouchableOpacity
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+              style={[styles.mapBackButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+
+            {/* Right-side controls */}
+            <View style={styles.mapTopRight}>
+              <TouchableOpacity
+                style={[styles.floatingButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+                onPress={() => {
+                  setViewMode('list');
+                  setSelectedProperty(null);
+                }}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Switch to list view"
+              >
+                <Ionicons name="list" size={16} color={theme.colors.primary} />
+                <Text style={[styles.floatingButtonText, { color: theme.colors.primary }]}>List</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.floatingButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+                onPress={toggleMapLayer}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle map style"
+              >
+                <Ionicons 
+                  name={mapLayer === 'satellite' ? 'earth' : mapLayer === 'osm' ? 'compass' : 'map'} 
+                  size={16} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={[styles.floatingButtonText, { color: theme.colors.primary }]}>
+                  {mapLayer === 'detailed' ? 'Streets' : mapLayer === 'satellite' ? 'Satellite' : 'OSM'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+
+        {/* Bottom-left floating actions */}
+        <View style={styles.mapBottomControls} pointerEvents="box-none">
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={[styles.floatingButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+              onPress={handleFitAllMarkers}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Fit all properties"
+            >
+              <Ionicons name="expand-outline" size={16} color={theme.colors.primary} />
+              <Text style={[styles.floatingButtonText, { color: theme.colors.primary }]}>Fit All</Text>
+            </TouchableOpacity>
+
+            <Surface style={[styles.countBadge, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+              <Ionicons name="location" size={13} color={theme.colors.primary} />
+              <Text style={[styles.countBadgeText, { color: theme.colors.text }]}>
+                {properties.length} {properties.length === 1 ? 'place' : 'places'}
+              </Text>
+            </Surface>
+          </View>
+        </View>
+
+        {/* Selected property card */}
+        {selectedProperty && (
+          <View style={styles.cardContainer}>
+            <PropertyMapCard
+              property={selectedProperty}
+              onClose={() => setSelectedProperty(null)}
+              onViewDetails={() => router.push(`/property/${selectedProperty._id || selectedProperty.id}`)}
+              onGetDirections={() => {
+                const coords = getPropertyCoords(selectedProperty, 0);
+                router.push({
+                  pathname: '/map',
+                  params: {
+                    id: selectedProperty._id || selectedProperty.id,
+                    lat: String(coords.latitude),
+                    lng: String(coords.longitude),
+                    title: selectedProperty.title,
+                  },
+                });
+              }}
+            />
+          </View>
+        )}
+      </View>
+    );
+  }
+
+  // ─── LIST / LOADING MODE ───
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Search</Text>
-        <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>Find your perfect property in Kenya</Text>
-        {usingFallback && (
-          <Text style={{ color: theme.colors.error, fontSize: 12, marginTop: 4, fontStyle: 'italic' }}>
-            Showing sample data - backend offline
-          </Text>
-        )}
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Search</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>Find your perfect property in Kenya</Text>
+          {usingFallback && (
+            <Text style={{ color: theme.colors.error, fontSize: 12, marginTop: 4, fontStyle: 'italic' }}>
+              Showing sample data - backend offline
+            </Text>
+          )}
+        </View>
       </View>
 
       <HeroSearch onSearch={(p) => loadProperties(p, 1, false)} />
@@ -202,25 +465,48 @@ export default function SearchScreen() {
 
       <SectionHeader title={`${resultsCount} Results`} />
 
-      {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      ) : viewMode === 'list' ? (
+      {loading && properties.length === 0 ? (
+        <FlatList
+          data={SKELETON_ITEMS}
+          keyExtractor={(item) => `skeleton-${item}`}
+          key={`skeleton-grid-${numColumns}`}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+          contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: 12 }]}
+          showsVerticalScrollIndicator={false}
+          renderItem={() => (
+            <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
+              <PropertyCardSkeleton compact={numColumns > 1} />
+            </View>
+          )}
+        />
+      ) : (
         <FlatList
           data={properties}
           keyExtractor={(item, index) => (item._id || item.id || index).toString()}
-          contentContainerStyle={styles.listContent}
+          key={`property-list-${numColumns}`}
+          numColumns={numColumns}
+          columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
+          contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: 12 }]}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <PropertyCard
-              property={item}
-              onPress={() => router.push(`/property/${item._id || item.id}`)}
-              onFavorite={(p) => dispatch(toggleFavouriteAction(p))}
-            />
+          initialNumToRender={numColumns * 3}
+          maxToRenderPerBatch={numColumns * 2}
+          windowSize={7}
+          updateCellsBatchingPeriod={20}
+          removeClippedSubviews={Platform.OS !== 'web'}
+          renderItem={({ item, index }) => (
+            <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
+              <PropertyCard
+                property={item}
+                index={index}
+                onPress={() => router.push(`/property/${item._id || item.id}`)}
+                onFavorite={(p) => dispatch(toggleFavouriteAction(p))}
+                compact={numColumns > 1}
+              />
+            </View>
           )}
           onEndReached={loadMoreProperties}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.8}
           ListFooterComponent={
             loadingMore ? (
               <View style={{ paddingVertical: 16, alignItems: 'center' }}>
@@ -231,72 +517,6 @@ export default function SearchScreen() {
             )
           }
         />
-      ) : (
-        <View style={styles.mapContainer}>
-          <OSMMapView
-            initialRegion={initialRegion}
-            style={styles.map}
-            onPress={() => setSelectedProperty(null)}
-          >
-            {properties.map((item, index) => {
-              const coords = getPropertyCoords(item, index);
-              const isSelected = selectedProperty?._id || selectedProperty?.id;
-              const isCurrent = isSelected === (item._id || item.id);
-              
-              return (
-                <MapMarker
-                  key={`map-item-${item._id || item.id || index}`}
-                  coordinate={coords}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    setSelectedProperty(item);
-                  }}
-                >
-                  <Surface
-                    style={[
-                      styles.markerBadge,
-                      {
-                        backgroundColor: isCurrent ? theme.colors.primary : theme.colors.surface,
-                        borderColor: theme.colors.primary,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.markerPriceText,
-                        { color: isCurrent ? '#FFFFFF' : theme.colors.primary },
-                      ]}
-                    >
-                      {formatPrice(item.price)}
-                    </Text>
-                  </Surface>
-                </MapMarker>
-              );
-            })}
-          </OSMMapView>
-
-          {selectedProperty && (
-            <View style={styles.cardContainer}>
-              <PropertyMapCard
-                property={selectedProperty}
-                onClose={() => setSelectedProperty(null)}
-                onViewDetails={() => router.push(`/property/${selectedProperty._id || selectedProperty.id}`)}
-                onGetDirections={() => {
-                  const coords = getPropertyCoords(selectedProperty, 0);
-                  router.push({
-                    pathname: '/map',
-                    params: {
-                      id: selectedProperty._id || selectedProperty.id,
-                      lat: String(coords.latitude),
-                      lng: String(coords.longitude),
-                      title: selectedProperty.title,
-                    },
-                  });
-                }}
-              />
-            </View>
-          )}
-        </View>
       )}
     </SafeAreaView>
   );
@@ -307,9 +527,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,
@@ -328,10 +559,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 16,
   },
-  loader: {
-    marginTop: 24,
-    alignItems: 'center',
-  },
   mapContainer: {
     flex: 1,
     position: 'relative',
@@ -339,20 +566,81 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
-  markerBadge: {
+  nativePointerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pointerBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 1.5,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
+    boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.25)',
+  },
+  pointerStem: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 5,
+    borderRightWidth: 5,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#2563eb',
+    marginTop: -1,
+  },
+  pointerDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#2563eb',
+    borderWidth: 1,
+    borderColor: '#ffffff',
+    marginTop: -2,
   },
   markerPriceText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  floatingControls: {
+    position: 'absolute',
+    top: 12,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 15,
+    pointerEvents: 'box-none',
+  },
+  floatingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 11,
+    borderRadius: 20,
+    borderWidth: 1,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.2)',
+  },
+  floatingButtonText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
+  },
+  countBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.15)',
+  },
+  countBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   cardContainer: {
     position: 'absolute',
@@ -360,5 +648,56 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     zIndex: 20,
+  },
+  fullscreenContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  mapOverlayTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    pointerEvents: 'box-none',
+  },
+  mapTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 16 : 8,
+    pointerEvents: 'box-none',
+  },
+  mapBackButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.3)',
+  },
+  mapTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    pointerEvents: 'box-none',
+  },
+  mapBottomControls: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    zIndex: 15,
+    pointerEvents: 'box-none',
+  },
+  markerBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    marginBottom: 0,
   },
 });

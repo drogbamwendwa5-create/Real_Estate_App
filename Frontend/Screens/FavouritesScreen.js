@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, Text, Alert, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, FlatList, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -10,13 +10,25 @@ import { useTheme } from '../Context/ThemeContext';
 
 const FavouritesScreen = ({ navigation }) => {
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
   const [favourites, setFavourites] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
+  // Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop
+  const numColumns = useMemo(() => {
+    if (width >= 1280) return 4;
+    if (width >= 900) return 3;
+    return 2;
+  }, [width]);
+
   useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     fetchFavourites();
-  }, []);
+  }, [user]);
 
   const fetchFavourites = async () => {
     try {
@@ -52,7 +64,7 @@ const FavouritesScreen = ({ navigation }) => {
       <View style={[styles.header, { backgroundColor: theme.colors.card, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Home')}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
@@ -68,17 +80,21 @@ const FavouritesScreen = ({ navigation }) => {
       ) : (
         <FlatList
           data={favourites}
-          keyExtractor={item => item._id}
-          numColumns={2}
+          keyExtractor={item => item._id || item.property?._id || Math.random().toString()}
+          key={numColumns}
+          numColumns={numColumns}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
           ListEmptyComponent={renderEmptyState}
           renderItem={({ item }) => (
-            <PropertyCard
-              property={item.property}
-              onFavouritePress={() => handleRemoveFavourite(item.property._id)}
-              isFavorite={true}
-            />
+            <View style={{ flex: 1, marginHorizontal: 4 }}>
+              <PropertyCard
+                property={item.property}
+                onFavouritePress={() => handleRemoveFavourite(item.property._id)}
+                isFavorite={true}
+                compact={numColumns >= 3}
+              />
+            </View>
           )}
         />
       )}
@@ -121,10 +137,11 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: 8,
-    paddingBottom: 16,
+    paddingBottom: 24,
   },
   row: {
     justifyContent: 'space-between',
+    paddingHorizontal: 4,
   },
   emptyContainer: {
     flex: 1,

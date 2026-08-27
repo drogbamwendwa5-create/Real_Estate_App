@@ -82,7 +82,8 @@ const sourceConfig = {
     rentkenya: {
       name: "RentKenya",
       baseUrl: "https://www.rentkenya.com",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 3000,
       scraperPath: "../scrapers/rentkenya/scraper",
       headers: {},
@@ -93,7 +94,8 @@ const sourceConfig = {
     officespace: {
       name: "OfficeSpace Kenya",
       baseUrl: "https://www.officespace.co.ke",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 3000,
       scraperPath: "../scrapers/officespace/scraper",
       headers: {},
@@ -103,7 +105,8 @@ const sourceConfig = {
     commercialke: {
       name: "CommercialKe",
       baseUrl: "https://www.commercialke.com",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 3000,
       scraperPath: "../scrapers/commercialke/scraper",
       headers: {},
@@ -125,7 +128,8 @@ const sourceConfig = {
     airbnb: {
       name: "Airbnb",
       baseUrl: "https://www.airbnb.com",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 5000,
       scraperPath: "../scrapers/airbnb/scraper",
       headers: {},
@@ -135,7 +139,8 @@ const sourceConfig = {
     booking: {
       name: "Booking.com",
       baseUrl: "https://www.booking.com",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 5000,
       scraperPath: "../scrapers/booking/scraper",
       headers: {},
@@ -145,7 +150,8 @@ const sourceConfig = {
     vrbo: {
       name: "VRBO",
       baseUrl: "https://www.vrbo.com",
-      enabled: true,
+      // disabled: scraper module not implemented yet
+      enabled: false,
       rateLimitMs: 5000,
       scraperPath: "../scrapers/vrbo/scraper",
       headers: {},

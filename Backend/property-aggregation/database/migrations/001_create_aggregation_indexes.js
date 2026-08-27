@@ -56,6 +56,30 @@ async function runMigration() {
         results.push({ name, indexesCreated: indexes.length, status: 'success' });
         console.log(`[Migration] ✓ ${name} - ${indexes.length} indexes`);
       } catch (err) {
+        // Self-heal drifted indexes (e.g. an existing auto-named index whose
+        // options no longer match the schema) by dropping the conflicting
+        // non-_id indexes and rebuilding once.
+        if (/same name as the requested index/i.test(err.message)) {
+          try {
+            const requestedNames = [...err.message.matchAll(/name:\s*"([^"]+)"/g)].map(m => m[1]).filter(n => n && n !== '_id_');
+            const existing = await model.collection.indexes();
+            for (const idx of existing) {
+              if (idx.name !== '_id_' && requestedNames.includes(idx.name)) {
+                await model.collection.dropIndex(idx.name);
+                console.log(`[Migration]   dropped drifted index ${idx.name} on ${name} for rebuild`);
+              }
+            }
+            await model.ensureIndexes();
+            const indexes = await model.collection?.indexes?.() || [];
+            results.push({ name, indexesCreated: indexes.length, status: 'success', healed: true });
+            console.log(`[Migration] ✓ ${name} - ${indexes.length} indexes (healed)`);
+            continue;
+          } catch (retryErr) {
+            results.push({ name, status: 'error', error: retryErr.message });
+            console.error(`[Migration] ✗ ${name}: ${retryErr.message}`);
+            continue;
+          }
+        }
         results.push({ name, status: 'error', error: err.message });
         console.error(`[Migration] ✗ ${name}: ${err.message}`);
       }

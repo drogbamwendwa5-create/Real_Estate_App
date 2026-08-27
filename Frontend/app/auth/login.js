@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Animated } from 'react-native';
+import { View, StyleSheet, Alert, Animated, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
+import { Ionicons } from '@expo/vector-icons';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
 import { login } from '../../Services/api';
 import { FullScreenBackground } from '../../Screens/LegacyHomeScreen';
@@ -44,6 +45,15 @@ export default function LoginScreen() {
       <FullScreenBackground scrollY={scrollY} autoPlay duration={30000} />
       <Animated.ScrollView onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })} scrollEventThrottle={16} contentContainerStyle={styles.container}>
         <View style={styles.card}>
+      <TouchableOpacity
+        onPress={() => router.canGoBack() ? router.back() : router.replace('/auth/welcome')}
+        style={styles.backButton}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+      </TouchableOpacity>
       <Text style={styles.title}>Login</Text>
        <Controller
          control={control}
@@ -124,6 +134,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#050510' },
   container: { flexGrow: 1, justifyContent: 'center', padding: 20, paddingTop: 50, paddingBottom: 50 },
   card: { borderRadius: 24, padding: 20, backgroundColor: 'rgba(5, 5, 16, 0.76)' },
+  backButton: { position: 'absolute', top: 12, left: 12, width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)', alignItems: 'center', justifyContent: 'center' },
   title: { color: '#fff', fontSize: 28, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   input: { marginBottom: 8 },
   button: { marginTop: 16, paddingVertical: 8 },

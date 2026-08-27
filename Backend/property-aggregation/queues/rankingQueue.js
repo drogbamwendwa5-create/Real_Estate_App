@@ -19,7 +19,7 @@ class InMemoryQueue {
 }
 async function getQueue() {
   if (rankingQueue) return rankingQueue;
-  if (Queue && connection) { try { rankingQueue = new Queue('ranking-queue', { connection }); new QueueScheduler('ranking-queue', { connection }); return rankingQueue; } catch (e) {} }
+  if (Queue && connection) { try { rankingQueue = new Queue('ranking-queue', { connection }); if (typeof QueueScheduler === 'function') new QueueScheduler('ranking-queue', { connection }); return rankingQueue; } catch (e) {} }
   rankingQueue = new InMemoryQueue('ranking-queue'); return rankingQueue;
 }
 async function addJob(data, opts = {}) { const q = await getQueue(); return await q.add('process-ranking', data, { attempts: 3, backoff: { type: 'exponential', delay: 2000 }, ...opts }); }

@@ -20,7 +20,7 @@ class InMemoryQueue {
 }
 async function getQueue() {
   if (importQueue) return importQueue;
-  if (Queue && connection) { try { importQueue = new Queue('import-queue', { connection }); new QueueScheduler('import-queue', { connection }); return importQueue; } catch (e) {} }
+  if (Queue && connection) { try { importQueue = new Queue('import-queue', { connection }); if (typeof QueueScheduler === 'function') new QueueScheduler('import-queue', { connection }); return importQueue; } catch (e) {} }
   importQueue = new InMemoryQueue('import-queue'); return importQueue;
 }
 async function addJob(data, opts = {}) { const q = await getQueue(); return await q.add('process-import', data, { attempts: 3, backoff: { type: 'exponential', delay: 2000 }, ...opts }); }

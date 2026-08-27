@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../../Context/ThemeContext';
 import { getMyVerification, submitProfessionalApplication } from '../../Services/api';
 
 export default function AgentApplication() {
   const { theme } = useTheme();
+  const router = useRouter();
   const user = useSelector(state => state.auth.user);
   const [form, setForm] = useState({ company: '', licenseNumber: '', experience: '', message: '' });
   const [latest, setLatest] = useState(null);
@@ -53,6 +54,15 @@ export default function AgentApplication() {
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       <Stack.Screen options={{ title: 'Apply as an agent', headerShown: false }} />
       <ScrollView contentContainerStyle={styles.content}>
+        <Pressable
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+          style={[styles.backButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </Pressable>
         <View style={[styles.hero, { backgroundColor: theme.colors.primary }]}>
           <Ionicons name="briefcase-outline" size={34} color="#fff" />
           <Text style={styles.heroTitle}>List properties professionally.</Text>
@@ -83,6 +93,7 @@ function Field({ label, value, onChangeText, placeholder, multiline, theme }) {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { padding: 20, paddingTop: 30, paddingBottom: 60, gap: 16 },
+  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   hero: { borderRadius: 24, padding: 22, gap: 9 },
   heroTitle: { color: '#fff', fontSize: 27, fontWeight: '900' },
   heroCopy: { color: '#FFFFFFCC', fontSize: 14, lineHeight: 20 },

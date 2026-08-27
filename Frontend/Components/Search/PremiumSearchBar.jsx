@@ -1,6 +1,6 @@
 // src/Components/Search/PremiumSearchBar.jsx
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, FlatList, Text, StyleSheet, Platform, Animated } from 'react-native';
+import { View, TextInput, TouchableOpacity, FlatList, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../Context/ThemeContext';
 import useDebounce from '../../Hooks/useDebounce';
@@ -100,10 +100,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 12,
     height: 48,
-    ...Platform.select({
-      ios: { shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
-      android: { elevation: 2 },
-    }),
+    boxShadow: '0px 4px 10px rgba(15, 23, 42, 0.06)',
   },
   icon: {
     marginRight: 8,
@@ -125,11 +122,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     maxHeight: 180,
     zIndex: 10,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
   suggestionItem: {
     flexDirection: 'row',

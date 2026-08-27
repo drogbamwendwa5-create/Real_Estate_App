@@ -46,11 +46,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     borderWidth: 2,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
+    boxShadow: '0px 1px 1px rgba(0, 0, 0, 0.2)',
   },
   badgeText: {
     fontSize: 10,

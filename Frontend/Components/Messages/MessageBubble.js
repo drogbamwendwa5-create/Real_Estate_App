@@ -3,10 +3,16 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../Context/ThemeContext';
 
+const FALLBACK_AVATAR = require('../../assets/icon.png');
+const FALLBACK_PROPERTY_IMAGE = require('../../assets/hero_bg.jpg');
+
 export const MessageBubble = ({ message, onPress, style }) => {
   const { theme } = useTheme();
 
   if (!message) return null;
+
+  const avatarUri = message.avatar || message.senderAvatar;
+  const propertyImageUri = message.property?.image || message.property?.images?.[0]?.url || message.property?.images?.[0];
 
   const formatTime = (timestamp, fallback) => {
     if (!timestamp) return fallback || 'Now';
@@ -32,7 +38,7 @@ export const MessageBubble = ({ message, onPress, style }) => {
       activeOpacity={0.9}
     >
       <Image 
-        source={{ uri: message.avatar || message.senderAvatar || 'https://via.placeholder.com/48' }} 
+        source={avatarUri ? { uri: avatarUri } : FALLBACK_AVATAR}
         style={styles.avatar}
         resizeMode="cover"
       />
@@ -53,7 +59,7 @@ export const MessageBubble = ({ message, onPress, style }) => {
         {message.property && (
           <View style={[styles.propertyPreview, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
             <Image 
-              source={{ uri: message.property.image || message.property.images?.[0] || 'https://via.placeholder.com/60' }} 
+              source={propertyImageUri ? { uri: propertyImageUri } : FALLBACK_PROPERTY_IMAGE}
               style={styles.propertyImage}
               resizeMode="cover"
             />

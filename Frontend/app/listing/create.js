@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { Title, Paragraph, Text, Button, TextInput, Card, Divider, Chip, Switch } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../Context/ThemeContext';
@@ -44,12 +44,23 @@ export default function CreateListingScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
-            Create Listing
-          </Text>
-          <Paragraph style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-            List your property for sale or rent
-          </Paragraph>
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')}
+            style={[styles.backButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Icon name="arrow-back" size={22} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
+              Create Listing
+            </Text>
+            <Paragraph style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+              List your property for sale or rent
+            </Paragraph>
+          </View>
         </View>
 
         <View style={styles.form}>
@@ -231,7 +242,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 24,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 32,

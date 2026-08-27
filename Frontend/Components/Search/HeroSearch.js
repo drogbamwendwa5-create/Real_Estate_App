@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../Context/ThemeContext';
@@ -116,11 +116,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     height: 56,
-    ...Platform.select({
-      ios: { shadowColor: '#0F172A', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
-      android: { elevation: 2 },
-      default: {},
-    }),
+    boxShadow: '0px 4px 10px rgba(15, 23, 42, 0.06)',
   },
   searchIcon: {
     marginRight: 12,

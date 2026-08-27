@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Real Estate App",
+    "name": "HomeNest",
     "slug": "Real-Estate-App",
-    "scheme": "real-estate-app",
+    "scheme": "homenest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.realestate.app"
+      "bundleIdentifier": "com.homenest.app"
     },
     "android": {
       "usesCleartextTraffic": true,
@@ -24,7 +24,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.realestate.app"
+      "package": "com.homenest.app"
     },
     "web": {
       "favicon": "./assets/favicon.png",

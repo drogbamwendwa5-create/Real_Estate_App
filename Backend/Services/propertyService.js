@@ -51,7 +51,7 @@ const incrementViews = async (propertyId) => {
     const property = await Property.findByIdAndUpdate(
       propertyId,
       { $inc: { views: 1 } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     return property;
   } catch (error) {

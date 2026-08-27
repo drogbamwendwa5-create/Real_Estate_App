@@ -13,19 +13,31 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../Context/ThemeContext';
+import { useWindowDimensions } from 'react-native';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.72;
 const CARD_MARGIN = 12;
 
 const FeaturedCarousel = ({ properties = [], loading = false }) => {
   const { theme, isDarkMode } = useTheme();
+  const { width } = useWindowDimensions();
   const router = useRouter();
   const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
   const [activeIndex, setActiveIndex] = useState(0);
   const autoScrollTimer = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Responsive card dimensions
+  const cardWidth = React.useMemo(() => {
+    if (width >= 1400) return 320;
+    if (width >= 1024) return 300;
+    if (width >= 640) return 290;
+    return Math.min(width * 0.76, 320);
+  }, [width]);
+
+  const cardHeight = React.useMemo(() => {
+    return width >= 1024 ? 200 : 220;
+  }, [width]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -68,12 +80,16 @@ const FeaturedCarousel = ({ properties = [], loading = false }) => {
   if (loading) {
     return (
       <Animated.View style={[styles.skeletonRow, { opacity: fadeAnim }]}>
-        {[1, 2].map((i) => (
+        {[1, 2, 3].map((i) => (
           <View
             key={i}
             style={[
               styles.skeletonCard,
-              { backgroundColor: isDarkMode ? '#1E1E1E' : '#E2E8F0' },
+              { 
+                width: cardWidth, 
+                height: cardHeight,
+                backgroundColor: isDarkMode ? '#1E1E1E' : '#E2E8F0' 
+              },
             ]}
           />
         ))}
@@ -110,7 +126,7 @@ const FeaturedCarousel = ({ properties = [], loading = false }) => {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item._id || item.id}
         contentContainerStyle={styles.listContent}
-        snapToInterval={CARD_WIDTH + CARD_MARGIN}
+        snapToInterval={cardWidth + CARD_MARGIN}
         decelerationRate="fast"
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
@@ -118,7 +134,7 @@ const FeaturedCarousel = ({ properties = [], loading = false }) => {
         )}
         onMomentumScrollEnd={(e) => {
           const index = Math.round(
-            e.nativeEvent.contentOffset.x / (CARD_WIDTH + CARD_MARGIN)
+            e.nativeEvent.contentOffset.x / (cardWidth + CARD_MARGIN)
           );
           setActiveIndex(index);
         }}
@@ -126,7 +142,7 @@ const FeaturedCarousel = ({ properties = [], loading = false }) => {
           const imageUri = getImageUri(item);
           return (
             <TouchableOpacity
-              style={styles.card}
+              style={[styles.card, { width: cardWidth, height: cardHeight }]}
               onPress={() => router.push(`/property/${item._id || item.id}`)}
               activeOpacity={0.92}
             >
@@ -276,16 +292,10 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   card: {
-    width: CARD_WIDTH,
-    height: 220,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: 'hidden',
     marginRight: CARD_MARGIN,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
+    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.2)',
   },
   cardImage: {
     width: '100%',
@@ -399,9 +409,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   skeletonCard: {
-    width: CARD_WIDTH,
-    height: 220,
-    borderRadius: 20,
+    borderRadius: 18,
   },
 });
 

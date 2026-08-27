@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setProperties, setFeaturedProperties, setCurrentProperty, setLoading } from '../store/slices/propertySlice';
-import PropertyService from '../services/api/propertyService';
+import PropertyService from '../Services/api/propertyService';
 
 export const useProperties = () => {
   const dispatch = useDispatch();

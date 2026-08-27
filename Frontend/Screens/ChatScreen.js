@@ -23,9 +23,9 @@ const ChatScreen = ({ route, navigation }) => {
   const fetchMessages = async () => {
     try {
       const response = await getMessages(conversationId);
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+      setMessages(response?.data || response || []);
+    } catch {
+      setMessages([]);
     } finally {
       setLoading(false);
     }
@@ -34,8 +34,8 @@ const ChatScreen = ({ route, navigation }) => {
   const markMessagesAsRead = async () => {
     try {
       await markAsRead(conversationId);
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
+    } catch {
+      // Ignore read receipt error
     }
   };
 

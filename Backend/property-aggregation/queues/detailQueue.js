@@ -72,7 +72,10 @@ async function getQueue() {
   if (Queue && connection) {
     try {
       detailQueue = new Queue('detail-queue', { connection });
-      new QueueScheduler('detail-queue', { connection });
+      // BullMQ v5 removed QueueScheduler; guard for API compatibility
+      if (typeof QueueScheduler === 'function') {
+        new QueueScheduler('detail-queue', { connection });
+      }
       return detailQueue;
     } catch (e) { console.warn('[DetailQueue] Redis unavailable, using in-memory'); }
   }

@@ -40,4 +40,14 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context) return context;
+  const defaultTheme = getTheme(false);
+  return {
+    isDarkMode: false,
+    toggleTheme: () => {},
+    theme: defaultTheme,
+    paperTheme: customLightTheme,
+  };
+};

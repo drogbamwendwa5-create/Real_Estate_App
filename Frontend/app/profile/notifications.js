@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { List, Button, Chip } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function NotificationsScreen() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
@@ -42,27 +45,50 @@ export default function NotificationsScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
+        <TouchableOpacity
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+        </TouchableOpacity>
         <ActivityIndicator size="large" />
       </View>
     );
   }
 
   return (
-    <FlatList
-      data={notifications}
-      renderItem={renderItem}
-      keyExtractor={(item) => item._id}
-      contentContainerStyle={styles.container}
-      ListEmptyComponent={
-        <Text style={styles.empty}>No notifications</Text>
-      }
-    />
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={notifications}
+        renderItem={renderItem}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={styles.container}
+        ListHeaderComponent={
+          <TouchableOpacity
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/profile')}
+            style={styles.backButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={22} color="#2563EB" />
+          </TouchableOpacity>
+        }
+        ListEmptyComponent={
+          <Text style={styles.empty}>No notifications</Text>
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  backButton: { position: 'absolute', top: 12, left: 14, zIndex: 10, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
   item: { backgroundColor: '#fff', marginBottom: 8 },
   unreadItem: { backgroundColor: '#EFF6FF' },
   chip: { alignSelf: 'flex-start' },
