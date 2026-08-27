@@ -5,7 +5,6 @@ import { useRouter } from 'expo-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout as logoutAction, updateUser } from '../../../store/slices/authSlice';
 import authService from '../../../Services/api/authService';
-import { logout as logoutApi } from '../../../Services/api';
 import { useTheme } from '../../../Context/ThemeContext';
 import { confirmAlert } from '../../../Utils/helpers';
 
@@ -88,7 +87,7 @@ export default function ProfileScreen() {
         // notifies the server (bounded, non-blocking).
         dispatch(logoutAction());
         router.replace('/auth/login');
-        logoutApi().catch((e) => console.warn('Logout API error:', e));
+        authService.logout().catch((e) => console.warn('Logout API error:', e));
       },
       'Log out'
     );
