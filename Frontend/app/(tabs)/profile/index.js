@@ -82,15 +82,13 @@ export default function ProfileScreen() {
     confirmAlert(
       'Log out',
       'Are you sure you want to log out?',
-      async () => {
-        try {
-          await logoutApi();
-        } catch (e) {
-          console.warn('Logout API error:', e);
-        } finally {
-          dispatch(logoutAction());
-          router.replace('/auth/login');
-        }
+      () => {
+        // Log out locally and navigate immediately. Never block on the network:
+        // logout() clears the local session first and only then best-effort
+        // notifies the server (bounded, non-blocking).
+        dispatch(logoutAction());
+        router.replace('/auth/login');
+        logoutApi().catch((e) => console.warn('Logout API error:', e));
       },
       'Log out'
     );

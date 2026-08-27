@@ -78,13 +78,21 @@ export const getFeatureFlags = async () => {
 };
 
 export const logout = async () => {
+  // Always clear the local session FIRST so logout always succeeds, even when
+  // offline or when the backend is slow/unreachable. The server-side call is
+  // best-effort and time-bounded so it can never block the user from logging out.
+  await Promise.all([removeToken(), removeUser()]);
+
   try {
-    await api.get('/auth/logout');
+    await Promise.race([
+      api.get('/auth/logout'),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Logout request timed out')), 5000)
+      ),
+    ]);
   } catch (error) {
     // A local logout must still succeed if the device is offline or the session has expired.
-    console.warn('Server logout request failed; clearing the local session instead.', error);
-  } finally {
-    await Promise.all([removeToken(), removeUser()]);
+    console.warn('Server logout request failed; local session already cleared.', error);
   }
 };
 
