@@ -203,11 +203,9 @@ export default function AdvancedTools({ embedded = false } = {}) {
 
       <LinearGradient colors={['#0B1220', '#152238']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: Math.max(insets.top, 16) + (embedded ? 4 : 8) }]}>
         <View style={styles.heroTop}>
-          {!embedded ? (
-            <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.heroIconBtn}>
-              <Ionicons name="arrow-back" size={20} color="#F8FAFC" />
-            </Pressable>
-          ) : <View style={styles.heroIconBtn} />}
+          <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)/home')} style={styles.heroIconBtn}>
+            <Ionicons name="arrow-back" size={20} color="#F8FAFC" />
+          </Pressable>
           <View style={styles.heroBadge}>
             <Ionicons name="construct" size={13} color="#F8FAFC" />
             <Text style={styles.heroBadgeText}>SYSTEM</Text>

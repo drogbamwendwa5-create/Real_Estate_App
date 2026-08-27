@@ -121,7 +121,7 @@ export const updateUserDetails = async (data) => {
 };
 
 export const getAdminDashboard = async () => {
-  const response = await api.get('/admin/stats');
+  const response = await api.get('/admin/dashboard');
   return response.data;
 };
 

@@ -9,7 +9,7 @@ const { assertRoleChangeAllowed, canonicalRole } = require('../Services/rbacServ
 const { isSuperAdmin, requireProtectedSuperAdminPin } = require('../Utils/superAdminGuard');
 
 // @desc    Get dashboard stats
-// @route   GET /api/admin/stats
+// @route   GET /api/admin/dashboard
 // @access  Private/Admin
 exports.getDashboardStats = asyncHandler(async (req, res, next) => {
   const totalUsers = await User.countDocuments();
