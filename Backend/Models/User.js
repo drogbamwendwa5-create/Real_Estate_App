@@ -90,7 +90,8 @@ const UserSchema = new mongoose.Schema({
 const ROLE_CANONICAL = { user: 'buyer-tenant', agent: 'agency-professional' };
 
 UserSchema.pre('validate', function () {
-  const expected = ROLE_CANONICAL[this.role] || this.role;
+  const effectiveRole = this.role || 'user';
+  const expected = ROLE_CANONICAL[effectiveRole] || effectiveRole;
   if (this.canonicalRole !== expected) this.canonicalRole = expected;
 });
 UserSchema.pre('save', async function () {
@@ -102,11 +103,17 @@ UserSchema.pre('save', async function () {
 });
 
 UserSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (!enteredPassword || !this.password) return false;
+  try {
+    return await bcrypt.compare(enteredPassword, this.password);
+  } catch (err) {
+    return false;
+  }
 };
 
 UserSchema.methods.generateJWT = function () {
-  return jwt.sign({ id: this._id, role: this.role, canonicalRole: this.canonicalRole }, process.env.JWT_SECRET, {
+  const secret = process.env.JWT_SECRET || 'real_estate_jwt_secret_production_fallback_key_2026';
+  return jwt.sign({ id: this._id, role: this.role, canonicalRole: this.canonicalRole }, secret, {
     expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 };

@@ -25,7 +25,12 @@ export default function LoginScreen() {
       dispatch(loginSuccess({ user: response.user, token: response.token }));
       router.replace('/(tabs)/home');
     } catch (error) {
-      const message = error.response?.data?.message || error.message || 'Login failed';
+      let message = error.response?.data?.message || error.message || 'Login failed';
+      if (error.response?.status === 401 && !error.response?.data?.message) {
+        message = 'Invalid email or password. Please check your credentials.';
+      } else if (error.response?.status === 500) {
+        message = error.response?.data?.message || 'Server error encountered. Please try again shortly.';
+      }
       if (/recovery PIN/i.test(message)) setShowRecoveryPin(true);
       dispatch(loginFailure(message));
       Alert.alert('Login Failed', message);

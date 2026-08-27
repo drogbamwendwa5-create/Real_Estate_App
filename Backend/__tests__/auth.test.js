@@ -132,8 +132,8 @@ describe('GET /api/auth/verify-email/:token', () => {
     const res = await request(app).get('/api/auth/verify-email/validtoken123');
 
     expect(res.statusCode).toBe(200);
-    await user.reload();
-    expect(user.isVerified).toBe(true);
+    const updatedUser = await User.findById(user._id);
+    expect(updatedUser.isVerified).toBe(true);
   });
 
   it('should fail with invalid token', async () => {

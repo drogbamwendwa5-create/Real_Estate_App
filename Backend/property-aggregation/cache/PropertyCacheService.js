@@ -4,14 +4,14 @@ const cc = require("../config/cache.config");
 class PropertyCacheService {
   constructor() {
     this.client = null;
-    if (cc.enabled) {
+    if (cc && cc.enabled) {
       try {
         this.client = new redis({
           ...cc.redis,
-          maxRetriesPerRequest: 1,
+          maxRetriesPerRequest: 0,
           enableOfflineQueue: false,
-          connectTimeout: 2000,
-          retryStrategy: cc.redis.retryStrategy,
+          connectTimeout: 1000,
+          retryStrategy: () => null,
         });
         this.client.on("error", () => {});
       } catch (e) {

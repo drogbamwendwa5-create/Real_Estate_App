@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getSuperAdminFeatureFlags } from '../Services/api';
+import { getFeatureFlags } from '../Services/api';
 
 const FeatureFlagContext = createContext();
 
@@ -11,7 +11,7 @@ export const FeatureFlagProvider = ({ children }) => {
   const loadFlags = async () => {
     try {
       setLoading(true);
-      const data = await getSuperAdminFeatureFlags();
+      const data = await getFeatureFlags();
       setFlags(data?.data || data || {});
       setError(null);
     } catch (err) {

@@ -3,16 +3,21 @@ const allowedOrigins = [
   'http://localhost:19006',
   'http://localhost:19000',
   'http://localhost:8080',
-  'http:// 192.168.0.29:8081',
-  'http:// 192.168.0.29:19006',
+  'http://localhost:3000',
+  'http://192.168.0.29:8081',
+  'http://192.168.0.29:19006',
+  'https://real-estate-app-jvgi.onrender.com',
 ];
 
-// Also allow any localhost origin for development
-const devPattern = /^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)(:\d+)?$/;
+// Allow any localhost, local network IP, or render/vercel hosting for apps
+const devPattern = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|.*\.onrender\.com|.*\.vercel\.app|.*\.netlify\.app|.*\.exp\.direct)(:\d+)?$/;
 
 // Also allow any origin set via environment variable
 if (process.env.CORS_ORIGIN) {
-  allowedOrigins.push(process.env.CORS_ORIGIN);
+  process.env.CORS_ORIGIN.split(',').forEach(o => allowedOrigins.push(o.trim()));
+}
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL.trim());
 }
 
 module.exports = {
@@ -21,11 +26,11 @@ module.exports = {
     if (!origin || allowedOrigins.indexOf(origin) !== -1 || devPattern.test(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
+      callback(null, false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'x-super-admin-break-glass-pin'],
   maxAge: 86400,
 };

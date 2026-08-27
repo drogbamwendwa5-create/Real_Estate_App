@@ -4,7 +4,7 @@ exports.registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }).withMessage('Name cannot exceed 50 characters'),
   body('email').trim().isEmail().withMessage('Please provide a valid email').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('phone').optional({ values: 'falsy' }).isMobilePhone('any').withMessage('Please provide a valid phone number'),
+  body('phone').optional({ values: 'falsy' }).matches(/^(\+?\d{1,4}[\s-]?)?\(?\d{1,4}\)?[\s.-]?\d{3,14}$/).withMessage('Please provide a valid phone number'),
 ];
 
 exports.loginValidation = [

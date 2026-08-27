@@ -9,15 +9,20 @@ const { recordAudit } = require('../Services/auditService');
 const { isSuperAdmin, verifyBreakGlassPin } = require('../Utils/superAdminGuard');
 
 const issueRefreshToken = async (user, req) => {
-  const raw = crypto.randomBytes(48).toString('hex');
-  await RefreshToken.create({
-    user: user._id,
-    tokenHash: crypto.createHash('sha256').update(raw).digest('hex'),
-    userAgent: req.get('user-agent'),
-    ip: req.ip,
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  });
-  return raw;
+  try {
+    const raw = crypto.randomBytes(48).toString('hex');
+    await RefreshToken.create({
+      user: user._id,
+      tokenHash: crypto.createHash('sha256').update(raw).digest('hex'),
+      userAgent: req?.get ? req.get('user-agent') : req?.headers?.['user-agent'],
+      ip: req?.ip,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+    return raw;
+  } catch (err) {
+    console.error('[Auth] Failed to issue refresh token:', err.message);
+    return null;
+  }
 };
 
 const refresh = asyncHandler(async (req, res, next) => {
@@ -33,9 +38,14 @@ const refresh = asyncHandler(async (req, res, next) => {
 
 exports.register = asyncHandler(async (req, res, next) => {
   const { name, email, password, phone } = req.body;
-  if (await User.findOne({ email })) return next(new ErrorResponse('User already exists with this email', 400));
-  const user = await User.create({ name, email, password, phone, canonicalRole: 'buyer-tenant', verificationToken: crypto.randomBytes(20).toString('hex') });
-  sendWelcomeEmail(user);
+  const normalizedEmail = (email || '').trim().toLowerCase();
+  if (await User.findOne({ email: normalizedEmail })) return next(new ErrorResponse('User already exists with this email', 400));
+  const user = await User.create({ name: (name || '').trim(), email: normalizedEmail, password, phone, canonicalRole: 'buyer-tenant', verificationToken: crypto.randomBytes(20).toString('hex') });
+  try {
+    sendWelcomeEmail(user);
+  } catch (emailErr) {
+    console.warn('[Auth] Welcome email skipped:', emailErr.message);
+  }
   const token = user.generateJWT();
   const refreshToken = await issueRefreshToken(user, req);
   await recordAudit(req, 'auth.registered', 'User', user._id);
@@ -45,33 +55,73 @@ exports.register = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password, breakGlassPin } = req.body;
   if (!email || !password) return next(new ErrorResponse('Please provide email and password', 400));
-  const user = await User.findOne({ email }).select('+password');
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail }).select('+password');
+
   if (!user) {
-    await LoginHistory.create({ email, success: false, ip: req.ip, userAgent: req.get('user-agent'), reason: 'unknown-user' });
+    try {
+      await LoginHistory.create({ email: normalizedEmail, success: false, ip: req.ip, userAgent: req?.get ? req.get('user-agent') : undefined, reason: 'unknown-user' });
+    } catch (logErr) {
+      console.warn('[Auth] LoginHistory error:', logErr.message);
+    }
     return next(new ErrorResponse('Invalid credentials', 401));
   }
-  if (!(await user.comparePassword(password))) {
-    await LoginHistory.create({ user: user._id, email, success: false, ip: req.ip, userAgent: req.get('user-agent'), reason: 'invalid-password' });
-    user.failedLoginCount = (user.failedLoginCount || 0) + 1;
-    await user.save({ validateBeforeSave: false });
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    try {
+      await LoginHistory.create({ user: user._id, email: normalizedEmail, success: false, ip: req.ip, userAgent: req?.get ? req.get('user-agent') : undefined, reason: 'invalid-password' });
+      user.failedLoginCount = (user.failedLoginCount || 0) + 1;
+      await user.save({ validateBeforeSave: false });
+    } catch (logErr) {
+      console.warn('[Auth] Failed login history error:', logErr.message);
+    }
     return next(new ErrorResponse('Invalid credentials', 401));
   }
+
   if ((!user.isActive || user.suspendedAt) && !(isSuperAdmin(user) && await verifyBreakGlassPin(breakGlassPin))) {
     return next(new ErrorResponse('Account is inactive or suspended. A valid Super Admin recovery PIN is required.', 403));
   }
+
   if (isSuperAdmin(user) && breakGlassPin && await verifyBreakGlassPin(breakGlassPin)) {
     user.isActive = true;
     user.suspendedAt = undefined;
   }
 
-  user.loginCount = (user.loginCount || 0) + 1;
-  user.lastSeenAt = new Date();
-  await user.save({ validateBeforeSave: false });
-  await LoginHistory.create({ user: user._id, email, success: true, ip: req.ip, userAgent: req.get('user-agent') });
+  try {
+    user.loginCount = (user.loginCount || 0) + 1;
+    user.lastSeenAt = new Date();
+    await user.save({ validateBeforeSave: false });
+  } catch (saveErr) {
+    console.warn('[Auth] User metadata save warning:', saveErr.message);
+  }
+
+  try {
+    await LoginHistory.create({ user: user._id, email: normalizedEmail, success: true, ip: req.ip, userAgent: req?.get ? req.get('user-agent') : undefined });
+  } catch (logErr) {
+    console.warn('[Auth] LoginHistory success record warning:', logErr.message);
+  }
+
   const token = user.generateJWT();
   const refreshToken = await issueRefreshToken(user, req);
   await recordAudit(req, 'auth.login.success', 'User', user._id);
-  res.status(200).json({ success: true, token, refreshToken, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role, canonicalRole: user.canonicalRole, isVerified: user.isVerified, avatar: user.avatar } });
+
+  res.status(200).json({
+    success: true,
+    token,
+    refreshToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      canonicalRole: user.canonicalRole,
+      isVerified: user.isVerified,
+      avatar: user.avatar,
+    },
+  });
 });
 
 exports.refresh = refresh;

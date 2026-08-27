@@ -25,6 +25,14 @@ const getApiUrl = () => {
     // expo-constants may not be available in all contexts
   }
 
+  // In local development, connect to local backend (web: localhost, mobile: LAN IP)
+  if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    if (Platform.OS === 'web') {
+      return 'http://localhost:5000/api';
+    }
+    return DEV_API_URL;
+  }
+
   // Expo Go on a physical phone cannot reach localhost or 10.0.2.2
   if (Platform.OS === 'android' || Platform.OS === 'ios') {
     return DEV_API_URL;

@@ -25,8 +25,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const isAuthRoute =
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/feature-flags');
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isAuthRoute) {
       originalRequest._retry = true;
       await removeToken();
     }
@@ -37,19 +41,40 @@ api.interceptors.response.use(
 
 // Auth APIs
 export const register = async (name, email, password, phone) => {
-  const response = await api.post('/auth/register', { name, email, password, phone });
+  const response = await api.post('/auth/register', {
+    name: name?.trim(),
+    email: email?.trim()?.toLowerCase(),
+    password,
+    phone,
+  });
   if (response.data.token) {
     await storeToken(response.data.token);
   }
   return response.data;
 };
 
-export const login = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
+export const login = async (email, password, breakGlassPin) => {
+  const payload = {
+    email: email?.trim()?.toLowerCase(),
+    password,
+  };
+  if (breakGlassPin) {
+    payload.breakGlassPin = breakGlassPin;
+  }
+  const response = await api.post('/auth/login', payload);
   if (response.data.token) {
     await storeToken(response.data.token);
   }
   return response.data;
+};
+
+export const getFeatureFlags = async () => {
+  try {
+    const response = await api.get('/feature-flags');
+    return response.data;
+  } catch (err) {
+    return { success: true, data: {} };
+  }
 };
 
 export const logout = async () => {

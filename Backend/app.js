@@ -106,6 +106,14 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/profiles', userRoutes);
 
+// Feature flags public route
+app.get('/api/feature-flags', (req, res) => {
+  res.json({
+    success: true,
+    data: req.featureFlags || {},
+  });
+});
+
 // Default route
 app.get('/api', (req, res) => {
   res.json({

@@ -17,6 +17,9 @@ class CacheManager {
 
     // Start periodic cleanup
     this._cleanupInterval = setInterval(() => this._cleanup(), 60000); // Clean every minute
+    if (this._cleanupInterval && typeof this._cleanupInterval.unref === 'function') {
+      this._cleanupInterval.unref();
+    }
   }
 
   /**

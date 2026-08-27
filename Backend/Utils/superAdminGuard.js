@@ -4,8 +4,12 @@ const { canonicalRole } = require('../Services/rbacService');
 const isSuperAdmin = user => canonicalRole(user?.role || user?.canonicalRole) === 'super-admin';
 
 const verifyBreakGlassPin = async pin => {
-  const hash = process.env.SUPER_ADMIN_BREAK_GLASS_PIN_HASH;
-  return Boolean(hash && pin && await bcrypt.compare(String(pin), hash));
+  try {
+    const hash = process.env.SUPER_ADMIN_BREAK_GLASS_PIN_HASH;
+    return Boolean(hash && pin && (await bcrypt.compare(String(pin), hash)));
+  } catch (err) {
+    return false;
+  }
 };
 
 const requireProtectedSuperAdminPin = async (actor, target, pin) => {

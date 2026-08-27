@@ -38,7 +38,12 @@ export const setNavigation = (router) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRoute =
+      error.config?.url?.includes('/auth/login') ||
+      error.config?.url?.includes('/auth/register') ||
+      error.config?.url?.includes('/feature-flags');
+
+    if (error.response?.status === 401 && !isAuthRoute) {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
       if (routerInstance) {
