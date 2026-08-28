@@ -15,13 +15,23 @@ const securityHeaders = require('./Config/security');
 
 // Middleware imports
 const securityMiddleware = require('./Middleware/security');
-const { generalLimiter } = require('./Middleware/rateLimiter');
+const { generalLimiter, authLimiter } = require('./Middleware/rateLimiter');
 const logger = require('./Middleware/logger');
 const errorHandler = require('./Middleware/errorHandler');
 const { maintenanceMode, attachFeatureFlags } = require('./Middleware/featureFlags');
 
 // Initialize Express app
 const app = express();
+
+// Behind Render / Vercel / any reverse proxy we need to honor the X-Forwarded-For
+// header or rate-limiting will count requests by the proxy's IP. Setting trust
+// proxy to a single hop is the safe default for a single edge proxy.
+app.set('trust proxy', 1);
+
+// Parse nested query-string objects (e.g. price[gte]=100000 -> { price: { gte: ... } }).
+// Express 5 defaults to the "simple" parser which flattens bracket notation and
+// breaks the APIFeatures range filters used across controllers.
+app.set('query parser', 'extended');
 
 // Public, dependency-free probe used by Render and the scheduled keep-alive job.
 // Keep this ahead of the API middleware so a health check remains cheap and is
@@ -34,11 +44,6 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
-
-// Parse nested query-string objects (e.g. price[gte]=100000 -> { price: { gte: ... } }).
-// Express 5 defaults to the "simple" parser which flattens bracket notation and
-// breaks the APIFeatures range filters used across controllers.
-app.set('query parser', 'extended');
 
 // Route imports
 const authRoutes = require('./Routes/authRoutes');
@@ -85,6 +90,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Sanitize req.body and req.params against NoSQL operator injection
+// (e.g. {"$gt":""} or {"email":{"$ne":null}}). Express 5 makes req.query
+// read-only, so controllers that read req.query should call
+// securityMiddleware.sanitizeReqQuery(req) before passing it to Mongoose.
+app.use(securityMiddleware.sanitize);
+
 // Logger
 app.use(logger());
 
@@ -95,8 +106,8 @@ app.use(generalLimiter);
 app.use(attachFeatureFlags);
 app.use(maintenanceMode);
 
-// Mount routes
-app.use('/api/auth', authRoutes);
+// Mount routes — auth gets a stricter, dedicated limiter to slow brute force.
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/categories', categoryRoutes);
