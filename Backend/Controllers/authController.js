@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../Services/emailService');
 const { recordAudit } = require('../Services/auditService');
 const { isSuperAdmin, verifyBreakGlassPin } = require('../Utils/superAdminGuard');
+const { setAuthCookies, clearAuthCookies } = require('../Utils/cookies');
 
 const issueRefreshToken = async (user, req) => {
   try {
@@ -33,7 +34,10 @@ const refresh = asyncHandler(async (req, res, next) => {
   if (!stored || !stored.user || !stored.user.isActive) return next(new ErrorResponse('Invalid refresh token', 401));
   stored.revokedAt = new Date();
   await stored.save();
-  res.json({ success: true, token: stored.user.generateJWT(), refreshToken: await issueRefreshToken(stored.user, req) });
+  const newAccess = stored.user.generateJWT();
+  const newRefresh = await issueRefreshToken(stored.user, req);
+  setAuthCookies(res, newAccess, newRefresh);
+  res.json({ success: true, token: newAccess, refreshToken: newRefresh });
 });
 
 exports.register = asyncHandler(async (req, res, next) => {
@@ -49,6 +53,7 @@ exports.register = asyncHandler(async (req, res, next) => {
   const token = user.generateJWT();
   const refreshToken = await issueRefreshToken(user, req);
   await recordAudit(req, 'auth.registered', 'User', user._id);
+  setAuthCookies(res, token, refreshToken);
   res.status(201).json({ success: true, token, refreshToken, user: { id: user._id, name: user.name, email: user.email, phone: user.phone, role: user.role, canonicalRole: user.canonicalRole, isVerified: user.isVerified } });
 });
 
@@ -106,6 +111,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   const token = user.generateJWT();
   const refreshToken = await issueRefreshToken(user, req);
   await recordAudit(req, 'auth.login.success', 'User', user._id);
+  setAuthCookies(res, token, refreshToken);
 
   res.status(200).json({
     success: true,
@@ -129,17 +135,22 @@ exports.refresh = refresh;
 exports.logout = asyncHandler(async (req, res) => {
   const raw = req.body && req.body.refreshToken;
   if (raw) await RefreshToken.findOneAndUpdate({ tokenHash: crypto.createHash('sha256').update(raw).digest('hex') }, { revokedAt: new Date() });
-  res.clearCookie('token');
-  res.clearCookie('refreshToken');
+  await recordAudit(req, 'auth.logout', 'User', req.user && req.user._id);
+  clearAuthCookies(res);
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 });
 
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
-  if (!user) return next(new ErrorResponse('No user found with that email', 404));
+  if (!user) {
+    // Audit the look-up even when no user matches so failed lookups are reviewable.
+    await recordAudit(req, 'auth.forgot_password.no_user', 'User', undefined, { email: (req.body.email || '').toLowerCase() });
+    return next(new ErrorResponse('No user found with that email', 404));
+  }
   const resetToken = user.generateResetToken();
   await user.save({ validateBeforeSave: false });
   sendPasswordResetEmail(user, resetToken);
+  await recordAudit(req, 'auth.forgot_password.sent', 'User', user._id);
   res.status(200).json({ success: true, message: 'Password reset email sent' });
 });
 
@@ -151,7 +162,11 @@ exports.resetPassword = asyncHandler(async (req, res, next) => {
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
-  res.status(200).json({ success: true, token: user.generateJWT(), message: 'Password reset successful' });
+  await recordAudit(req, 'auth.password.reset', 'User', user._id);
+  const token = user.generateJWT();
+  const refreshToken = await issueRefreshToken(user, req);
+  setAuthCookies(res, token, refreshToken);
+  res.status(200).json({ success: true, token, refreshToken, message: 'Password reset successful' });
 });
 
 exports.updatePassword = asyncHandler(async (req, res, next) => {
@@ -160,7 +175,10 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
   if (!(await user.comparePassword(req.body.currentPassword))) return next(new ErrorResponse('Current password is incorrect', 400));
   user.password = req.body.newPassword;
   await user.save();
-  res.status(200).json({ success: true, message: 'Password updated successfully', token: user.generateJWT() });
+  const token = user.generateJWT();
+  await recordAudit(req, 'auth.password.updated', 'User', user._id);
+  setAuthCookies(res, token);
+  res.status(200).json({ success: true, message: 'Password updated successfully', token });
 });
 
 exports.verifyEmail = asyncHandler(async (req, res, next) => {
@@ -169,6 +187,7 @@ exports.verifyEmail = asyncHandler(async (req, res, next) => {
   user.isVerified = true;
   user.verificationToken = undefined;
   await user.save();
+  await recordAudit(req, 'auth.email.verified', 'User', user._id);
   res.status(200).json({ success: true, message: 'Email verified successfully' });
 });
 
@@ -185,7 +204,8 @@ exports.deleteAccount = asyncHandler(async (req, res, next) => {
   user.name = 'Deleted User';
   user.password = crypto.randomBytes(20).toString('hex');
   await user.save();
-  res.clearCookie('token');
+  await recordAudit(req, 'auth.account.deleted', 'User', user._id);
+  clearAuthCookies(res);
   res.status(200).json({ success: true, message: 'Account deleted successfully', data: {} });
 });
 

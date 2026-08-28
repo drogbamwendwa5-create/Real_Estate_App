@@ -17,6 +17,7 @@ const securityHeaders = require('./Config/security');
 const securityMiddleware = require('./Middleware/security');
 const { generalLimiter, authLimiter } = require('./Middleware/rateLimiter');
 const logger = require('./Middleware/logger');
+const { requestId } = require('./Middleware/requestId');
 const errorHandler = require('./Middleware/errorHandler');
 const { maintenanceMode, attachFeatureFlags } = require('./Middleware/featureFlags');
 
@@ -95,6 +96,9 @@ app.use(cookieParser());
 // read-only, so controllers that read req.query should call
 // securityMiddleware.sanitizeReqQuery(req) before passing it to Mongoose.
 app.use(securityMiddleware.sanitize);
+
+// Request ID — must come before the logger so morgan tokens see req.id.
+app.use(requestId());
 
 // Logger
 app.use(logger());
