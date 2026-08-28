@@ -430,6 +430,19 @@ export default function SearchScreen() {
     );
   }
 
+  const renderListHeader = () => (
+    <>
+      <HeroSearch onSearch={(p) => loadProperties(p, 1, false)} />
+      <View style={styles.toolbar}>
+        <MapToggle viewMode={viewMode} onToggle={(mode) => {
+          setViewMode(mode);
+          setSelectedProperty(null);
+        }} />
+      </View>
+      <SectionHeader title={`${resultsCount} Results`} />
+    </>
+  );
+
   // ─── LIST / LOADING MODE ───
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
@@ -454,17 +467,6 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      <HeroSearch onSearch={(p) => loadProperties(p, 1, false)} />
-
-      <View style={styles.toolbar}>
-        <MapToggle viewMode={viewMode} onToggle={(mode) => {
-          setViewMode(mode);
-          setSelectedProperty(null);
-        }} />
-      </View>
-
-      <SectionHeader title={`${resultsCount} Results`} />
-
       {loading && properties.length === 0 ? (
         <FlatList
           data={SKELETON_ITEMS}
@@ -474,6 +476,7 @@ export default function SearchScreen() {
           columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : null}
           contentContainerStyle={[styles.listContent, numColumns > 1 && { paddingHorizontal: 12 }]}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderListHeader}
           renderItem={() => (
             <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
               <PropertyCardSkeleton compact={numColumns > 1} />
@@ -494,6 +497,7 @@ export default function SearchScreen() {
           windowSize={7}
           updateCellsBatchingPeriod={20}
           removeClippedSubviews={Platform.OS !== 'web'}
+          ListHeaderComponent={renderListHeader}
           renderItem={({ item, index }) => (
             <View style={numColumns > 1 ? { flex: 1, marginHorizontal: 4 } : null}>
               <PropertyCard
