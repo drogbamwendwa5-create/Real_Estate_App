@@ -10,7 +10,11 @@
     "newArchEnabled": true,
     "extra": {
       "apiUrl": "https://real-estate-app-jvgi.onrender.com/api",
-      "EXPO_APP_API_URL": "https://real-estate-app-jvgi.onrender.com/api"
+      "EXPO_APP_API_URL": "https://real-estate-app-jvgi.onrender.com/api",
+      "router": {},
+      "eas": {
+        "projectId": "4401fbb7-3d5d-4799-8c20-430ed3a7a885"
+      }
     },
     "ios": {
       "supportsTablet": true,
@@ -43,6 +47,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "despicable727",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4401fbb7-3d5d-4799-8c20-430ed3a7a885"
     }
   }
 }

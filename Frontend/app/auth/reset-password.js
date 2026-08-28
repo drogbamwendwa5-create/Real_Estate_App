@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../Context/ThemeContext';
 import { resetPassword } from '../../Services/api';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { control, handleSubmit, formState: { errors } } = useForm();
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: theme.colors.background },
+    backButton: { alignSelf: 'flex-start', marginBottom: 8, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
+    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8, color: theme.colors.text, textAlign: 'center' },
+    subtitle: { fontSize: 14, color: theme.colors.textSecondary, marginBottom: 24, textAlign: 'center' },
+    input: { marginBottom: 8 },
+    button: { marginTop: 16, paddingVertical: 8 },
+    success: { fontSize: 16, textAlign: 'center', color: theme.colors.success, marginBottom: 24 },
+  });
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -46,7 +58,7 @@ export default function ResetPasswordScreen() {
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Ionicons name="arrow-back" size={22} color="#2563EB" />
+        <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
       </TouchableOpacity>
       <Text style={styles.title}>Reset Password</Text>
       <Text style={styles.subtitle}>Enter your new password</Text>
@@ -79,13 +91,3 @@ export default function ResetPasswordScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  backButton: { alignSelf: 'flex-start', marginBottom: 8, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 24, textAlign: 'center' },
-  input: { marginBottom: 8 },
-  button: { marginTop: 16, paddingVertical: 8 },
-  success: { fontSize: 16, textAlign: 'center', color: '#16A34A', marginBottom: 24 },
-});

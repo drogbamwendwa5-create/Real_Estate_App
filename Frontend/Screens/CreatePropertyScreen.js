@@ -65,11 +65,21 @@ const CreatePropertyScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const propertyData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
         price: parseFloat(formData.price),
+        propertyType: formData.propertyType,
+        status: formData.status,
         bedrooms: parseInt(formData.bedrooms) || 0,
         bathrooms: parseInt(formData.bathrooms) || 0,
         area: parseFloat(formData.area) || 0,
+        address: {
+          street: formData.street,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country || 'Kenya',
+        },
         features: formData.features.split(',').map(f => f.trim()).filter(f => f),
         amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
         images: images.map(img => ({ url: img.uri, isFeatured: false })),

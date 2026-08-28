@@ -1,10 +1,3 @@
-<!--
-  TEMPLATE NOTICE (remove before publishing): This document was prepared from the app's
-  actual code and data flows. It is not legal advice — have it reviewed by a qualified
-  lawyer and complete all [bracketed] placeholders (legal entity name, address, retention
-  periods, etc.) before publishing.
--->
-
 # Privacy Policy
 
 **Effective Date:** 27 August 2026 · **Last Updated:** 27 August 2026

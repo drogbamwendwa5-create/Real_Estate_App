@@ -3,11 +3,23 @@ import { View, FlatList, StyleSheet, Text, ActivityIndicator, TouchableOpacity }
 import { List, Button, Chip } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../Context/ThemeContext';
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background, padding: 16 },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    backButton: { position: 'absolute', top: 12, left: 14, zIndex: 10, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
+    item: { backgroundColor: theme.colors.surface, marginBottom: 8 },
+    unreadItem: { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.primary },
+    chip: { alignSelf: 'flex-start' },
+    empty: { textAlign: 'center', marginTop: 32, color: theme.colors.textSecondary },
+  });
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -52,7 +64,7 @@ export default function NotificationsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+          <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
         <ActivityIndicator size="large" />
       </View>
@@ -74,7 +86,7 @@ export default function NotificationsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={22} color="#2563EB" />
+            <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
         }
         ListEmptyComponent={
@@ -84,13 +96,3 @@ export default function NotificationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  backButton: { position: 'absolute', top: 12, left: 14, zIndex: 10, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  item: { backgroundColor: '#fff', marginBottom: 8 },
-  unreadItem: { backgroundColor: '#EFF6FF' },
-  chip: { alignSelf: 'flex-start' },
-  empty: { textAlign: 'center', marginTop: 32, color: '#64748B' },
-});

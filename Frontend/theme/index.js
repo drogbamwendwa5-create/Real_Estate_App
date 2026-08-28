@@ -1,22 +1,22 @@
 export const getTheme = (isDarkMode) => {
   const colors = {
-    primary: '#1E3A8A', // Deep blue for trust and stability
-    secondary: '#3B82F6', // Lighter blue for accents
-    accent: '#10B981', // Emerald green for success and call-to-action
+    primary: isDarkMode ? '#60A5FA' : '#1E3A8A', // Bright blue on dark for contrast, deep blue on light
+    secondary: isDarkMode ? '#93C5FD' : '#3B82F6', // Lighter blue for accents
+    accent: isDarkMode ? '#34D399' : '#10B981', // Brighter emerald on dark for call-to-action
     gold: '#FFD700', // Keep gold for highlighting
-    success: '#10B981',
-    warning: '#F59E0B',
-    info: '#3B82F6',
+    success: isDarkMode ? '#34D399' : '#10B981',
+    warning: isDarkMode ? '#FBBF24' : '#F59E0B',
+    info: isDarkMode ? '#93C5FD' : '#3B82F6',
     overlay: isDarkMode ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.5)',
     card: isDarkMode ? '#1E293B' : '#FFFFFF', // Dark slate for cards in dark mode
-    background: isDarkMode => isDarkMode ? '#0F172A' : '#F8FAFC', // Very dark blue for background in dark mode, light gray for light
+    background: isDarkMode ? '#0F172A' : '#F8FAFC', // Very dark blue for background in dark mode, light gray for light
     surface: isDarkMode ? '#1E293B' : '#FFFFFF',
-    error: '#DC2626',
+    error: isDarkMode ? '#F87171' : '#DC2626',
     text: isDarkMode ? '#F8FAFC' : '#0F172A', // Light text on dark, dark text on light
-    textSecondary: isDarkMode ? '#94A3B8' : '#64748B',
-    textMuted: '#94A3B8',
-    disabled: '#CBD5E1',
-    border: isDarkMode ? '#334155' : '#E2E8F0',
+    textSecondary: isDarkMode ? '#CBD5E1' : '#64748B', // Brighter slate on dark for readable secondary text
+    textMuted: isDarkMode ? '#94A3B8' : '#64748B', // Dimmed but still legible on dark
+    disabled: isDarkMode ? '#64748B' : '#CBD5E1',
+    border: isDarkMode ? '#475569' : '#E2E8F0', // Brighter border on dark for clearer separation
   };
 
   const spacing = {

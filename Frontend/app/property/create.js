@@ -40,6 +40,7 @@ export default function CreatePropertyScreen() {
         title: form.title.trim(),
         description: form.description.trim(),
         price: Number(form.price),
+        status: 'for-sale',
         propertyType: normalizedType,
         bedrooms: Number(form.bedrooms) || 0,
         bathrooms: Number(form.bathrooms) || 0,
@@ -72,7 +73,25 @@ export default function CreatePropertyScreen() {
       <TextInput label="Description *" value={form.description} onChangeText={value => update('description', value)} mode="outlined" multiline numberOfLines={5} style={styles.input} />
       <View style={styles.row}>
         <TextInput label="Price (KES) *" value={form.price} onChangeText={value => update('price', value)} keyboardType="numeric" mode="outlined" style={[styles.input, styles.half]} />
-        <TextInput label="Property type" value={form.propertyType} onChangeText={value => update('propertyType', value.toLowerCase())} mode="outlined" style={[styles.input, styles.half]} />
+      </View>
+      <View style={styles.typeRow}>
+        <Text style={[styles.typeLabel, { color: theme.colors.text }]}>Property type *</Text>
+        <View style={styles.typeChips}>
+          {['apartment', 'house', 'land', 'commercial'].map(type => {
+            const active = form.propertyType === type;
+            return (
+              <TouchableOpacity
+                key={type}
+                onPress={() => update('propertyType', type)}
+                style={[styles.typeChip, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+              >
+                <Text style={[styles.typeChipText, { color: theme.colors.text }, active && { color: '#fff' }]}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
       <View style={styles.row}>
         <TextInput label="Bedrooms" value={form.bedrooms} onChangeText={value => update('bedrooms', value)} keyboardType="numeric" mode="outlined" style={[styles.input, styles.third]} />
@@ -98,5 +117,16 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   half: { flex: 1 },
   third: { flex: 1, minWidth: 0 },
+  typeRow: { gap: 8, marginBottom: 2 },
+  typeLabel: { fontSize: 13, fontWeight: '600' },
+  typeChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  typeChip: {
+    paddingVertical: 9,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(128,128,128,0.4)',
+  },
+  typeChipText: { fontSize: 14, fontWeight: '600', textTransform: 'capitalize' },
   submit: { marginTop: 8, borderRadius: 12, paddingVertical: 5 },
 });

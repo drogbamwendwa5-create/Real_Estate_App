@@ -1,4 +1,0 @@
-◇ injected env (23) from Backend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-MongoDB Connected: ac-8cck0gn-shard-00-01.f5vythh.mongodb.net
-[Migration] Creating indexes for aggregation models...
-[Seed] Categories already exist, skipping

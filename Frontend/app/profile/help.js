@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, Linking, TouchableOpacity, View } from 'r
 import { List, Button, Title, Paragraph } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../Context/ThemeContext';
 
 const faqs = [
   { q: 'How do I create a property listing?', a: 'Tap the "Create Listing" button from the home screen and fill in the property details.' },
@@ -14,6 +15,18 @@ const faqs = [
 
 export default function HelpScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background, padding: 16 },
+    headerRow: { flexDirection: 'row', marginBottom: 8 },
+    backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8, color: theme.colors.text },
+    subtitle: { fontSize: 14, color: theme.colors.textSecondary, marginBottom: 16 },
+    faqItem: { backgroundColor: theme.colors.surface, marginBottom: 8 },
+    button: { marginTop: 16 },
+  });
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerRow}>
@@ -24,7 +37,7 @@ export default function HelpScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+          <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
       <Title style={styles.title}>Help & Support</Title>
@@ -46,13 +59,3 @@ export default function HelpScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
-  headerRow: { flexDirection: 'row', marginBottom: 8 },
-  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 16 },
-  faqItem: { backgroundColor: '#fff', marginBottom: 8 },
-  button: { marginTop: 16 },
-});

@@ -4,15 +4,24 @@ import { List, Button, Text, Divider } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useDispatch } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../Context/ThemeContext';
 import { logout as logoutApi } from '../../Services/api';
 import { logout as logoutAction } from '../../store/slices/authSlice';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { theme } = useTheme();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(true);
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, paddingTop: 15, backgroundColor: theme.colors.background },
+    headerRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 },
+    backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
+    logout: { margin: 16 },
+  });
 
   return (
     <ScrollView style={styles.container}>
@@ -24,7 +33,7 @@ export default function SettingsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={22} color="#2563EB" />
+          <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
       <List.Section>
@@ -89,10 +98,3 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 15, backgroundColor: '#F8FAFC' },
-  headerRow: { flexDirection: 'row', paddingHorizontal: 16, marginBottom: 8 },
-  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  logout: { margin: 16 },
-});

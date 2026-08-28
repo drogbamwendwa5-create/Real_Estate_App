@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
+import { useTheme } from '../../Context/ThemeContext';
 import authService from '../../Services/api/authService';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +11,19 @@ export default function OTPVerificationScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const { theme } = useTheme();
   const { control, handleSubmit, formState: { errors } } = useForm();
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: theme.colors.background },
+    backButton: { alignSelf: 'flex-start', marginBottom: 8, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.surface },
+    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8, color: theme.colors.text, textAlign: 'center' },
+    subtitle: { fontSize: 14, color: theme.colors.textSecondary, marginBottom: 32, textAlign: 'center' },
+    otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
+    otpInput: { width: 48, height: 56, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 8, textAlign: 'center', fontSize: 24, fontWeight: 'bold', color: theme.colors.text },
+    button: { marginTop: 16, paddingVertical: 8 },
+    resend: { color: theme.colors.primary, textAlign: 'center', marginTop: 16, fontSize: 14 },
+  });
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -47,7 +60,7 @@ export default function OTPVerificationScreen() {
         accessibilityRole="button"
         accessibilityLabel="Go back"
       >
-        <Ionicons name="arrow-back" size={22} color="#2563EB" />
+        <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
       </TouchableOpacity>
       <Text style={styles.title}>Verify OTP</Text>
       <Text style={styles.subtitle}>Enter the 6-digit code sent to your email</Text>
@@ -61,14 +74,3 @@ export default function OTPVerificationScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  backButton: { alignSelf: 'flex-start', marginBottom: 8, width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontSize: 14, color: '#64748B', marginBottom: 32, textAlign: 'center' },
-  otpContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
-  otpInput: { width: 48, height: 56, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, textAlign: 'center', fontSize: 24, fontWeight: 'bold' },
-  button: { marginTop: 16, paddingVertical: 8 },
-  resend: { color: '#2563EB', textAlign: 'center', marginTop: 16, fontSize: 14 },
-});

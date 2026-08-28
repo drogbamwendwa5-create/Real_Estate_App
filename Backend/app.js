@@ -23,6 +23,18 @@ const { maintenanceMode, attachFeatureFlags } = require('./Middleware/featureFla
 // Initialize Express app
 const app = express();
 
+// Public, dependency-free probe used by Render and the scheduled keep-alive job.
+// Keep this ahead of the API middleware so a health check remains cheap and is
+// never rate-limited alongside customer traffic.
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    status: 'ok',
+    service: 'real-estate-api',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Parse nested query-string objects (e.g. price[gte]=100000 -> { price: { gte: ... } }).
 // Express 5 defaults to the "simple" parser which flattens bracket notation and
 // breaks the APIFeatures range filters used across controllers.

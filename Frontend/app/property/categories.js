@@ -3,6 +3,7 @@ import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native
 import { Card, Title, Paragraph, Chip } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../Context/ThemeContext';
 
 const categories = [
   { id: '1', name: 'Apartment', icon: 'home', count: 120 },
@@ -15,6 +16,20 @@ const categories = [
 
 export default function CategoriesScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background, padding: 16 },
+    headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+    backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: theme.colors.surface },
+    header: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', flex: 1, color: theme.colors.text },
+    card: { flex: 1, margin: 8, minWidth: 150 },
+    cardContent: { alignItems: 'center', padding: 16 },
+    chip: { marginBottom: 8 },
+    title: { fontSize: 16, textAlign: 'center' },
+    count: { fontSize: 12, color: theme.colors.textSecondary, textAlign: 'center' },
+  });
+
   const renderCategory = ({ item }) => (
     <Card style={styles.card}>
       <Card.Content style={styles.cardContent}>
@@ -41,7 +56,7 @@ export default function CategoriesScreen() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="arrow-back" size={22} color="#2563EB" />
+            <Ionicons name="arrow-back" size={22} color={theme.colors.primary} />
           </TouchableOpacity>
           <Text style={styles.header}>Browse by Category</Text>
         </View>
@@ -49,15 +64,3 @@ export default function CategoriesScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC', padding: 16 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  backButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: '#E2E8F0', alignItems: 'center', justifyContent: 'center', marginRight: 12, backgroundColor: '#fff' },
-  header: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', flex: 1 },
-  card: { flex: 1, margin: 8, minWidth: 150 },
-  cardContent: { alignItems: 'center', padding: 16 },
-  chip: { marginBottom: 8 },
-  title: { fontSize: 16, textAlign: 'center' },
-  count: { fontSize: 12, color: '#64748B', textAlign: 'center' },
-});
