@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "HomeNest",
-    "slug": "Real-Estate-App",
+    "slug": "homenest",
     "scheme": "homenest",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,7 @@
       "EXPO_APP_API_URL": "https://real-estate-app-jvgi.onrender.com/api",
       "router": {},
       "eas": {
-        "projectId": "4401fbb7-3d5d-4799-8c20-430ed3a7a885"
+        "projectId": "528bc162-3982-4735-ac8f-79bec5b9c138"
       }
     },
     "ios": {
