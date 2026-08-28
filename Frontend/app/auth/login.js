@@ -3,15 +3,17 @@ import { View, StyleSheet, Alert, Animated, TouchableOpacity } from 'react-nativ
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import { selectHasAcceptedLegal } from '../../store/selectors';
 import { login } from '../../Services/api';
 import { FullScreenBackground } from '../../Screens/LegacyHomeScreen';
 
 export default function LoginScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const hasAcceptedLegal = useSelector(selectHasAcceptedLegal);
   const [showPassword, setShowPassword] = useState(false);
   const [showRecoveryPin, setShowRecoveryPin] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ export default function LoginScreen() {
     try {
       const response = await login(data.email, data.password, showRecoveryPin ? data.breakGlassPin : undefined);
       dispatch(loginSuccess({ user: response.user, token: response.token }));
-      router.replace('/(tabs)/home');
+      router.replace(hasAcceptedLegal ? '/(tabs)/home' : '/legal/consent');
     } catch (error) {
       let message = error.response?.data?.message || error.message || 'Login failed';
       if (error.response?.status === 401 && !error.response?.data?.message) {

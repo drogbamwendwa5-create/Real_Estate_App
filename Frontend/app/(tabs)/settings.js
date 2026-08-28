@@ -61,6 +61,47 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+            LEGAL
+          </Text>
+          <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+            <TouchableOpacity
+              style={[styles.menuItem, { borderBottomColor: theme.colors.border }]}
+              onPress={() => router.push('/legal/privacy')}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={theme.colors.primary} />
+              </View>
+              <View style={styles.menuContent}>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
+                  Privacy Policy
+                </Text>
+                <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
+                  How we collect and use your data
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.menuItem, { borderBottomWidth: 0 }]}
+              onPress={() => router.push('/legal/terms')}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+                <Ionicons name="document-text-outline" size={22} color={theme.colors.primary} />
+              </View>
+              <View style={styles.menuContent}>
+                <Text style={[styles.menuTitle, { color: theme.colors.text }]}>
+                  Terms of Use
+                </Text>
+                <Text style={[styles.menuDescription, { color: theme.colors.textSecondary }]}>
+                  Rules governing use of the app
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={[styles.userCard, { backgroundColor: theme.colors.surface }]}>
           <View style={styles.userInfo}>
             <View style={[styles.avatar, { backgroundColor: theme.colors.primary }]}>

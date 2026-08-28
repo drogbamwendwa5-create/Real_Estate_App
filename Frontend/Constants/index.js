@@ -43,3 +43,8 @@ export const SHADOWS = {
     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
   },
 };
+
+export const LEGAL = {
+  version: '1.0.0',
+  effectiveDate: '27 August 2026',
+};

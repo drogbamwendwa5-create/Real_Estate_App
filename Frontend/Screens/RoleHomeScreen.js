@@ -443,13 +443,7 @@ export default function RoleHomeScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
       {isBuyer && <FullScreenBackground scrollY={scrollY} accent={meta.accent} />}
-      <Animated.ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboard(); }} tintColor={meta.accent} />}
-        contentContainerStyle={[styles.content, { paddingHorizontal: width < 390 ? 16 : 20 }]}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
-        scrollEventThrottle={16}
-      >
+      <View style={[styles.fixedNav, { paddingHorizontal: width < 390 ? 16 : 20 }]}>
         <View style={styles.topRow}>
           <View style={styles.identity}>
             <View style={[styles.avatar, { backgroundColor: meta.accent }]}>
@@ -464,7 +458,14 @@ export default function RoleHomeScreen() {
             <Ionicons name="notifications-outline" size={21} color={theme.colors.text} />
           </Pressable>
         </View>
+      </View>
 
+      <Animated.ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadDashboard(); }} tintColor={meta.accent} />}
+        contentContainerStyle={[styles.content, { paddingHorizontal: width < 390 ? 16 : 20 }]}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+        scrollEventThrottle={16}
+      >
         <View style={[styles.hero, { backgroundColor: meta.accent }]}>
           <View style={styles.heroIcon}><Ionicons name={meta.icon} size={22} color="#FFFFFF" /></View>
           <Text style={styles.heroTitle}>{meta.title}</Text>
@@ -566,7 +567,8 @@ export default function RoleHomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { paddingTop: 18, paddingBottom: 120, gap: 18 },
+  fixedNav: { paddingTop: 18, paddingBottom: 6, zIndex: 10 },
+  content: { paddingTop: 12, paddingBottom: 120, gap: 18 },
   bgFrame: { width: '100%', height: '100%' },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 10 },

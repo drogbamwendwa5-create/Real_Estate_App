@@ -3,15 +3,17 @@ import { View, StyleSheet, Alert, Animated, TouchableOpacity } from 'react-nativ
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'expo-router';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+import { selectHasAcceptedLegal } from '../../store/selectors';
 import { register } from '../../Services/api';
 import { FullScreenBackground } from '../../Screens/LegacyHomeScreen';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const hasAcceptedLegal = useSelector(selectHasAcceptedLegal);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const scrollY = React.useRef(new Animated.Value(0)).current;
@@ -24,7 +26,7 @@ export default function RegisterScreen() {
     try {
       const response = await register(data.name, data.email, data.password, data.phone);
       dispatch(loginSuccess({ user: response.user, token: response.token }));
-      router.replace('/(tabs)/home');
+      router.replace(hasAcceptedLegal ? '/(tabs)/home' : '/legal/consent');
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Registration failed';
       dispatch(loginFailure(message));

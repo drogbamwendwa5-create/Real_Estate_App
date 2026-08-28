@@ -1,4 +1,5 @@
-import { Tabs, useRouter } from 'expo-router';
+import { Tabs, Redirect, useRouter } from 'expo-router';
+import { selectHasAcceptedLegal } from '../../store/selectors';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../../Context/ThemeContext';
@@ -10,7 +11,13 @@ export default function TabLayout() {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
+  const hasAcceptedLegal = useSelector(selectHasAcceptedLegal);
   const user = useSelector(state => state.auth.user);
+  if (isAuthenticated && !hasAcceptedLegal) {
+    return <Redirect href="/legal/consent" />;
+  }
+
   const role = canonicalRole(user?.role || user?.canonicalRole);
   const isSuper = role === 'super-admin';
   const isAdmin = role === 'admin';
